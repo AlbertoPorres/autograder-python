@@ -1,9 +1,9 @@
-# Busqueda de Herramientas para el Proyecto
+# Búsqueda de Herramientas para el Proyecto
 
 El primer paso con el que comenzar el proyecto es la selección de las herramientas que se utilizarán en el desarrollo de este las cuales serán, por un lado, el curso de Python
 del que se extraerán los contenidos y, por otro lado, el autograder para Python con el que se crearán las actividades autocorregibles que el alumnó deberá resolver.
 
-## Busqueda de Autograder
+## Búsqueda de Autograder
 ### Herramientas encontradas:
 ---
 **CodeGrade:** Esta es una aplicación de aprendizaje diseñara específicamente para la enseñanza de lenguajes de programación,
@@ -30,5 +30,7 @@ La principal y más atractiva característica de CodingRooms es la capacidad de 
 un curso. Con respecto al resto de características y funcionalidades, estas son muy similares a las ya listadas para CodeGrade
 
 ---
-**Otter-Grader:**
+**Otter-Grader:** Este es un autocalificador ligero y modular de código abierto diseñado para calificar tareas de Python y R para clases a cualquier escala, abstrayendo el funcionamiento interno del autograder, haciendolo así compatible con la distribución de tareas de cualquier instructor.
+
+Otter soporta calificación local a través de contenedores Docker paralelos, calificando mediante el uso de plataformas de autocalificación de terceros (LMSs), la maquina del instructor y un paquete cliente que permite a los alumnos e instructores comprobar y calificar las tareas. Este está diseñado para calificar ejecutables Python y R, Jypyter Notebooks y documentos RMarkdown, y es compatible con diferentes LMSs como Canvas y Gradescope.
 
