@@ -1,7 +1,8 @@
 # Búsqueda de Herramientas para el Proyecto
 
 El primer paso con el que comenzar el proyecto es la selección de las herramientas que se utilizarán en el desarrollo de este las cuales serán, por un lado, el curso de Python
-del que se extraerán los contenidos y, por otro lado, el autograder para Python con el que se crearán las actividades autocorregibles que el alumnó deberá resolver.
+del que se extraerán los contenidos y, por otro lado, diferentes autograders en Python con los cuales se crearán las actividades autocorregibles.
+Una vez se hayan probado los autogreders se pasará a análizar y comprender el funcionamiento interno de estos para tener así una base de partida para la creación de nuestro autograder.
 
 ## Búsqueda de Autograder
 ### Herramientas encontradas:
@@ -41,8 +42,13 @@ Otter soporta calificación local a través de contenedores Docker paralelos, ca
 *Documentación:* https://otter-grader.readthedocs.io/en/latest/
 
 ---
+**CS 41 Autograder:** CS 41 Hap.py es un curso de Stanford sobre el lenguaje de programación Python. Este permite la ejecución del codigo del estudiante y el código solución comparando la salido de ambos y la creación de test unitarios por parte del instructor que pueden ser ejecutados de forma concurrente, con la característica de que el instructor puede engancharse al módulo y proporcionar la lógica para post-procesar los resultados de las pruebas.
+
+*Documentación:* https://github.com/stanfordpython/autograder
+
+---
 ### Elección de Autograder:
-En la sección anterior se han descrito diferentes herramientas actualmente utilizadas para la creación de actividades autocorregibles, orientadas a la enseñanza de lenguajes de programación. CodeGrade y CodingRooms son dos herramientas muy similares centradas en la creación de cursos dentro de un ambiente web, esto hace que no sea posible la creación de las actividades de forma externa a su plataforma; es esta dependencia la que ha llevado a la decisión de utilizar el paquete de Python, **Otter-Grader** para el desarrollo de las actividades autocorregibles durante la realización de este proyecto.
+En la sección anterior se han descrito diferentes herramientas actualmente utilizadas para la creación de actividades autocorregibles, orientadas a la enseñanza de lenguajes de programación. CodeGrade y CodingRooms son dos herramientas muy similares centradas en la creación de cursos dentro de un ambiente web, esto hace que no sea posible la creación de las actividades de forma externa a su plataforma; es esta dependencia la que ha llevado a la decisión de utilizar el paquete de Python, **Otter-Grader** y el autograder de Stanfor **CS 41** para el desarrollo de las actividades autocorregibles y el posterior análisis de funcionamiento de ambos.
 
 ## Selección del Curso de Python:
 Los contenidos del curso que se desarrollará en este proyecto serán extraidos de un curso de Python ya existente, el curso elegido para este fin es la guía audivisual de Python  publicada por el canal de YouTube de **pildorasinformaticas** (https://www.youtube.com/c/pildorasinformaticas), esta consta de al rededor de 70 lecciones individuales dedicadas a la enseñanza de las principales y más importantes características del lenguaje de programación Python.
