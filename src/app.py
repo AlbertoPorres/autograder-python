@@ -2,7 +2,10 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 from forms import LoginForm
 from flask_sqlalchemy import SQLAlchemy
-
+import webbrowser
+import subprocess
+import time
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '7110c8ae51a4b5af97be6534caef90e4bb9bdcb3380af008f90b23a5d1616bf319bc298105da20fe'
@@ -64,8 +67,16 @@ def logout():
 @app.route('/teacher',methods=["GET", "POST"])
 @login_required
 def teacher():
+    # TEST DE APERTURA DE NOTEBOOKS CON JUPYTER DESDE LA PAGINA PRINCIPAL DEL MAESTRO
     if request.method == 'POST':
-        return None
+        if request.form.get('action1') == 'RUN NOTEBOOK':
+            #subprocess.Popen("jupyter notebook --ip='0.0.0.0' --port=8888")
+            os.system("jupyter notebook --ip='0.0.0.0' --no-browser --port=8888 &")
+            time.sleep(3)
+            webbrowser.open_new_tab("http://localhost:8888/notebooks/Curso%20Python%20V.0.ipynb")
+        if request.form.get('action2') == 'STOP NOTEBOOK':
+            os.system("jupyter notebook stop 8888")
+            #subprocess.Popen("jupyter notebook stop 8888")
     return render_template("teacher/teacher.html")
 
 @app.route('/student',methods=["GET", "POST"])
