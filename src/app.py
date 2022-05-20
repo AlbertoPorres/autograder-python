@@ -71,11 +71,16 @@ def teacher():
     if request.method == 'POST':
         if request.form.get('action1') == 'RUN NOTEBOOK':
             #subprocess.Popen("jupyter notebook --ip='0.0.0.0' --port=8888")
-            os.system("jupyter notebook --ip='0.0.0.0' --no-browser --port=8888 &")
-            time.sleep(3)
-            webbrowser.open_new_tab("http://localhost:8888/notebooks/Curso%20Python%20V.0.ipynb")
+            os.system("jupyter notebook --ip='0.0.0.0' --no-browser --allow-root --port=8888 &")
+            #time.sleep(4)
+            #webbrowser.open_new_tab("http://127.0.0.1:8888/notebooks/Curso%20Python%20V.0.ipynb")
+            #webbrowser.open_new_tab("https://www.google.com/")
         if request.form.get('action2') == 'STOP NOTEBOOK':
-            os.system("jupyter notebook stop 8888")
+            os.system("pkill -f -1 jupyter*")
+            #subprocess.Popen("jupyter notebook stop 8888")
+
+        if request.form.get('action3') == 'OPENTAB':
+            webbrowser.open_new_tab("https://www.google.com/")
             #subprocess.Popen("jupyter notebook stop 8888")
     return render_template("teacher/teacher.html")
 

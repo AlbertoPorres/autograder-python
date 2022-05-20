@@ -11,9 +11,8 @@ WORKDIR /project
 COPY . /project
 
 RUN pip3 --no-cache-dir install -r requirements.txt
-RUN pip3 install notebook
 RUN pip3 install nbgrader
 RUN jupyter nbextension install --sys-prefix --py nbgrader --overwrite
 RUN jupyter nbextension enable --sys-prefix --py nbgrader
 RUN jupyter serverextension enable --sys-prefix --py nbgrader
-CMD ["python3", "src/app.py"]
+#CMD ["python3", "src/app.py"]
