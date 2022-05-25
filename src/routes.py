@@ -3,7 +3,7 @@ from flask_login import LoginManager, current_user, login_required, login_user, 
 from src.forms import LoginForm
 import webbrowser
 import os
-from src.models import User
+from src.models import User, Course, Section, Calification, CourseMembers
 from src import app, db
 
 
@@ -21,13 +21,30 @@ db.drop_all()
 db.create_all()
 
 # manually added users
-Teacher = User(username = "Teacher1", password = "1234", is_teacher = True)
-Student = User(username = "Student1", password = "1234")
+Teacher = User(name = "Profesor 1", username = "Teacher1", password = "1234", is_teacher = True)
+Student1 = User(name = "Alberto", username = "Student1", password = "1234")
+Student2 = User(name = "Pablo", username = "Student2", password = "1234")
 db.session.add(Teacher)
-db.session.add(Student)
+db.session.add(Student1)
+db.session.add(Student2)
 db.session.commit()
 
+course = Course(teacher_id = Teacher.id, name = "Curso de Python", description = "Curso básico de python" )
+db.session.add(course)
+db.session.commit()
 
+section1 = Section(course_id = course.id, name = "Introduccion a Python", content_name = "T_Introduccion.ipynb", task_name = "EV_Introduccion")
+section2 = Section(course_id = course.id, name = "Funciones a Python", content_name = "T_Funciones.ipynb", task_name = "EV_Funciones")
+
+db.session.add(section1)
+db.session.add(section2)
+db.session.commit()
+
+student_enroll1 = CourseMembers(course_id = course.id, student_id = Student1.id)
+student_enroll2 = CourseMembers(course_id = course.id, student_id = Student2.id)
+db.session.add(student_enroll1)
+db.session.add(student_enroll2)
+db.session.commit()
 
 # ROUTES
 
