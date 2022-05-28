@@ -1,0 +1,9 @@
+{% extends "base_template.html" %}
+{% block title %}Studen Courses Page{% endblock %}
+{% block content %}
+    Bienvenido {{ name }} <br>
+    {% for course in courses %}
+        <h2>{{ course.name }}</h2> <a href="{{ url_for('student_course', course=course.name) }}"> Acceder al curso</a><br>
+
+    {% endfor %}
+{% endblock %}  

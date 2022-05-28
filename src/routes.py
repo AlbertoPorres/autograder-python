@@ -16,35 +16,38 @@ login_manager.login_view = "login"
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+def get_current_User(id):
+    return User.query.filter_by(id=id).first() 
 
-db.drop_all()
-db.create_all()
 
-# manually added users
-Teacher = User(name = "Profesor 1", username = "Teacher1", password = "1234", is_teacher = True)
-Student1 = User(name = "Alberto", username = "Student1", password = "1234")
-Student2 = User(name = "Pablo", username = "Student2", password = "1234")
-db.session.add(Teacher)
-db.session.add(Student1)
-db.session.add(Student2)
-db.session.commit()
+# db.drop_all()
+# db.create_all()
 
-course = Course(teacher_id = Teacher.id, name = "Curso de Python", description = "Curso básico de python" )
-db.session.add(course)
-db.session.commit()
+# # manually added users
+# Teacher = User(name = "Profesor 1", username = "Teacher1", password = "1234", is_teacher = True)
+# Student1 = User(name = "Alberto", username = "Student1", password = "1234")
+# Student2 = User(name = "Pablo", username = "Student2", password = "1234")
+# db.session.add(Teacher)
+# db.session.add(Student1)
+# db.session.add(Student2)
+# db.session.commit()
 
-section1 = Section(course_id = course.id, name = "Introduccion a Python", content_name = "T_Introduccion.ipynb", task_name = "EV_Introduccion")
-section2 = Section(course_id = course.id, name = "Funciones a Python", content_name = "T_Funciones.ipynb", task_name = "EV_Funciones")
+# course = Course(teacher_id = Teacher.id, name = "Curso de Python", description = "Curso básico de python" )
+# db.session.add(course)
+# db.session.commit()
 
-db.session.add(section1)
-db.session.add(section2)
-db.session.commit()
+# section1 = Section(course_id = course.id, name = "Introduccion a Python", content_name = "T_Introduccion.ipynb", task_name = "EV_Introduccion")
+# section2 = Section(course_id = course.id, name = "Funciones a Python", content_name = "T_Funciones.ipynb", task_name = "EV_Funciones")
 
-student_enroll1 = CourseMembers(course_id = course.id, student_id = Student1.id)
-student_enroll2 = CourseMembers(course_id = course.id, student_id = Student2.id)
-db.session.add(student_enroll1)
-db.session.add(student_enroll2)
-db.session.commit()
+# db.session.add(section1)
+# db.session.add(section2)
+# db.session.commit()
+
+# student_enroll1 = CourseMembers(course_id = course.id, student_id = Student1.id)
+# student_enroll2 = CourseMembers(course_id = course.id, student_id = Student2.id)
+# db.session.add(student_enroll1)
+# db.session.add(student_enroll2)
+# db.session.commit()
 
 # ROUTES
 
@@ -89,11 +92,50 @@ def teacher():
         if request.form.get('action3') == 'OPENTAB':
             webbrowser.open_new_tab("https://www.google.com/")
             #subprocess.Popen("jupyter notebook stop 8888")
-    return render_template("teacher/teacher.html")
+    return render_template("teacher.html")
 
 @app.route('/student',methods=["GET", "POST"])
 @login_required
 def student():
     if request.method == 'POST':
         return None
-    return render_template("student/student.html")
+    user = get_current_User(current_user.get_id())
+    return render_template("student.html", name = user.name)
+
+
+@app.route('/student/courses',methods=["GET"])
+@login_required
+def student_courses():
+    if request.method == 'POST':
+        return None
+    user = get_current_User(current_user.get_id())
+    return render_template("student/courses.html", name = user.name, courses = get_student_courses(user.id))
+
+
+@app.route('/student/courses/<string:course>',methods=["GET"])
+@login_required
+def student_course(course):
+    if request.method == 'POST':
+        return None
+    user = get_current_User(current_user.get_id())
+    current_course = Course.query.filter_by(name = course).first()
+    sections = Section.query.filter_by(course_id = current_course.id).all()
+    return render_template("student/course.html", name = user.name, sections = sections)
+
+
+# LISTA DE TODOS LOS CURSOS DE UN ALUMNO
+def get_student_courses(student_id):
+    courses = []
+    relationships = CourseMembers.query.filter_by(student_id = student_id).all()
+    for relationship in relationships:
+        courses.append(Course.query.filter_by(id = relationship.course_id).first())
+    return courses
+
+
+@app.route('/student/califications',methods=["GET"])
+@login_required
+def student_califications():
+    if request.method == 'POST':
+        return None
+    user = get_current_User(current_user.get_id())
+    return render_template("student/califications.html", name = user.name)
