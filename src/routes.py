@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, send_file, send_from_directory
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 from src.forms import LoginForm
 import webbrowser
@@ -112,16 +112,6 @@ def student_courses():
     return render_template("student/courses.html", name = user.name, courses = get_student_courses(user.id))
 
 
-@app.route('/student/courses/<string:course>',methods=["GET"])
-@login_required
-def student_course(course):
-    if request.method == 'POST':
-        return None
-    user = get_current_User(current_user.get_id())
-    current_course = Course.query.filter_by(name = course).first()
-    sections = Section.query.filter_by(course_id = current_course.id).all()
-    return render_template("student/course.html", name = user.name, sections = sections)
-
 
 # LISTA DE TODOS LOS CURSOS DE UN ALUMNO
 def get_student_courses(student_id):
@@ -130,6 +120,29 @@ def get_student_courses(student_id):
     for relationship in relationships:
         courses.append(Course.query.filter_by(id = relationship.course_id).first())
     return courses
+
+
+
+@app.route('/student/courses/<string:course>',methods=["GET"])
+@login_required
+def student_course(course):
+    if request.method == 'POST':
+        return None
+    user = get_current_User(current_user.get_id())
+    current_course = Course.query.filter_by(name = course).first()
+    sections = Section.query.filter_by(course_id = current_course.id).all()
+    return render_template("student/course.html", course = course, name = user.name, sections = sections)
+
+@app.route('/download_content/<string:course>/<string:filename>')
+def download_content(course,filename):
+    path = "courses/" + course + "/content"
+    return send_from_directory(path, filename, as_attachment=True)
+
+@app.route('/download_task/<string:course>/<string:filename>')
+def download_task(course,filename):
+    path = "courses/" + course + "/release/" + filename
+    notebook = filename + ".ipynb"
+    return send_from_directory(path, notebook, as_attachment=True)
 
 
 @app.route('/student/califications',methods=["GET"])

@@ -1,6 +1,7 @@
 from distutils.command.config import config
 from nbgrader.apps import NbGraderAPI
 from nbgrader.api import Gradebook
+from sqlalchemy import false
 from traitlets.config import Config
 from nbgrader.coursedir import CourseDirectory
 
@@ -21,11 +22,35 @@ class NbgraderManager:
         self.dbConnection = Gradebook(db_chain, course_name)
 
 
-    def autograde_test(self, task, student):
+    def add_student(self, student):
+        self.dbConnection.add_student(student)
+
+    
+    def remove_student(self, student):
+        self.dbConnection.remove_student(student)
+
+
+    def grade(self, task, student):
         self.api.autograde(task,student)
         submision = self.dbConnection.find_submission(task,student)
-        print(submision.score)
+        return submision.score
 
+
+    def is_submitted(self, task, student):
+        try:
+            self.dbConnection.find_submission(task,student)
+        except:
+            return False
+        else:
+            return True
+
+    def closeDB(self):
+        self.dbConnection.close()
+        
+        
 
 manager = NbgraderManager("Curso de Python")
-manager.autograde_test("EV_Funciones","pepe")
+print(manager.is_submitted("dsada","dasda"))
+print(manager.is_submitted("","dasda"))
+print(manager.is_submitted("EV_Funciones","pepe"))
+print(manager.is_submitted("EV_Funciones","pepe"))

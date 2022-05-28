@@ -5,6 +5,11 @@
 
     {% for section in sections %}
         <h2>{{ section.name }}</h2>
+        <a href="{{ url_for('download_content', course=course, filename=section.content_name) }}"> Descargar contenido teorico de la sección</a>
+        <a href="{{ url_for('download_task', course=course, filename=section.task_name) }}"> Descargar tarea de la sección</a>
+        <br>
+
+
 
     {% endfor %}
 {% endblock %}  
