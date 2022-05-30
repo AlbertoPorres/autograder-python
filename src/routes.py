@@ -1,10 +1,12 @@
 from flask import render_template, request, redirect, url_for, flash, send_file, send_from_directory
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 from src.forms import LoginForm
+from src.management import NbgraderManager
 import webbrowser
 import os
 from src.models import User, Course, Section, Calification, CourseMembers
 from src import app, db
+from werkzeug.utils import secure_filename
 
 
 #Login manager
@@ -20,34 +22,34 @@ def get_current_User(id):
     return User.query.filter_by(id=id).first() 
 
 
-# db.drop_all()
-# db.create_all()
+db.drop_all()
+db.create_all()
 
-# # manually added users
-# Teacher = User(name = "Profesor 1", username = "Teacher1", password = "1234", is_teacher = True)
-# Student1 = User(name = "Alberto", username = "Student1", password = "1234")
-# Student2 = User(name = "Pablo", username = "Student2", password = "1234")
-# db.session.add(Teacher)
-# db.session.add(Student1)
-# db.session.add(Student2)
-# db.session.commit()
+# manually added users
+Teacher = User(name = "Profesor 1", username = "Teacher1", password = "1234", is_teacher = True)
+Student1 = User(name = "Alberto", username = "Student1", password = "1234")
+Student2 = User(name = "Pablo", username = "Student2", password = "1234")
+db.session.add(Teacher)
+db.session.add(Student1)
+db.session.add(Student2)
+db.session.commit()
 
-# course = Course(teacher_id = Teacher.id, name = "Curso de Python", description = "Curso básico de python" )
-# db.session.add(course)
-# db.session.commit()
+course = Course(teacher_id = Teacher.id, name = "Curso de Python", description = "Curso básico de python" )
+db.session.add(course)
+db.session.commit()
 
-# section1 = Section(course_id = course.id, name = "Introduccion a Python", content_name = "T_Introduccion.ipynb", task_name = "EV_Introduccion")
-# section2 = Section(course_id = course.id, name = "Funciones a Python", content_name = "T_Funciones.ipynb", task_name = "EV_Funciones")
+section1 = Section(course_id = course.id, name = "Introduccion a Python", content_name = "T_Introduccion.ipynb", task_name = "EV_Introduccion")
+section2 = Section(course_id = course.id, name = "Funciones en Python", content_name = "T_Funciones.ipynb", task_name = "EV_Funciones")
 
-# db.session.add(section1)
-# db.session.add(section2)
-# db.session.commit()
+db.session.add(section1)
+db.session.add(section2)
+db.session.commit()
 
-# student_enroll1 = CourseMembers(course_id = course.id, student_id = Student1.id)
-# student_enroll2 = CourseMembers(course_id = course.id, student_id = Student2.id)
-# db.session.add(student_enroll1)
-# db.session.add(student_enroll2)
-# db.session.commit()
+student_enroll1 = CourseMembers(course_id = course.id, student_id = Student1.id)
+student_enroll2 = CourseMembers(course_id = course.id, student_id = Student2.id)
+db.session.add(student_enroll1)
+db.session.add(student_enroll2)
+db.session.commit()
 
 # ROUTES
 
@@ -123,15 +125,37 @@ def get_student_courses(student_id):
 
 
 
-@app.route('/student/courses/<string:course>',methods=["GET"])
+@app.route('/student/courses/<string:course>',methods=["GET", "POST"])
 @login_required
 def student_course(course):
-    if request.method == 'POST':
-        return None
+
     user = get_current_User(current_user.get_id())
+
+    if request.method == 'POST':
+        if request.files:
+            file = request.files['file']
+            task = request.form.get('task')
+            section = request.form.get('section')
+            notebook = task + ".ipynb"
+            if file.filename != notebook:
+                flash('Debe seleccionar la tarea correspondiente a este sección: ' + notebook)
+                return(redirect(request.url))
+            else:
+                flash("Su tarea ha sido enviada")
+                path = "courses/" + course + "/submitted/" + user.name + "/" + task 
+                file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),path ,secure_filename(file.filename)))
+                manager = NbgraderManager(course)
+                score = manager.grade(task,user.name)
+                calification = Calification(student_id = user.id, section_id = section, task_name = task, value = score)
+                db.session.add(calification)
+                db.session.commit()
+                manager.closeDB()
+
+    
     current_course = Course.query.filter_by(name = course).first()
     sections = Section.query.filter_by(course_id = current_course.id).all()
     return render_template("student/course.html", course = course, name = user.name, sections = sections)
+
 
 @app.route('/download_content/<string:course>/<string:filename>')
 def download_content(course,filename):
@@ -143,6 +167,14 @@ def download_task(course,filename):
     path = "courses/" + course + "/release/" + filename
     notebook = filename + ".ipynb"
     return send_from_directory(path, notebook, as_attachment=True)
+
+def allowed_file(filename, user):
+    if (user.is_teacher):
+        allowed_extensions = {"ipynb", "pdf"}
+    else:
+        allowed_extensions = {"ipynb"}
+    return '.' in filename and \
+        filename.rsplit(".", 1)[1].lower() in allowed_extensions
 
 
 @app.route('/student/califications',methods=["GET"])

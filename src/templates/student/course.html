@@ -5,8 +5,17 @@
 
     {% for section in sections %}
         <h2>{{ section.name }}</h2>
-        <a href="{{ url_for('download_content', course=course, filename=section.content_name) }}"> Descargar contenido teorico de la sección</a>
-        <a href="{{ url_for('download_task', course=course, filename=section.task_name) }}"> Descargar tarea de la sección</a>
+        <a href="{{ url_for('download_content', course=course, filename=section.content_name) }}"> Descargar contenido teorico de {{ section.name }}</a>
+        <a href="{{ url_for('download_task', course=course, filename=section.task_name) }}"> Descargar tarea de {{ section.name }}
+
+        </a>
+        <form method = "POST" enctype="multipart/form-data">
+            <input type = file name = file>
+            <input type = hidden name = task value = "{{ section.task_name }}">
+            <input type = hidden name = section value = "{{ section.name }}">
+            <input type= submit value = "Entregar Tarea" >
+
+        </form>
         <br>
 
 

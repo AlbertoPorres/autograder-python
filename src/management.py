@@ -1,7 +1,6 @@
 from distutils.command.config import config
 from nbgrader.apps import NbGraderAPI
 from nbgrader.api import Gradebook
-from sqlalchemy import false
 from traitlets.config import Config
 from nbgrader.coursedir import CourseDirectory
 
@@ -11,8 +10,8 @@ class NbgraderManager:
 
     def __init__(self, course_name):
 
-        root_chain = "courses/" + course_name
-        db_chain = "sqlite:///courses/"+ course_name + "/gradebook.db"
+        root_chain = "src/courses/" + course_name
+        db_chain = "sqlite:///src/courses/"+ course_name + "/gradebook.db"
     
         config = Config()
         config.CourseDirectory.root = root_chain
@@ -47,10 +46,9 @@ class NbgraderManager:
     def closeDB(self):
         self.dbConnection.close()
         
-        
 
-manager = NbgraderManager("Curso de Python")
-print(manager.is_submitted("dsada","dasda"))
-print(manager.is_submitted("","dasda"))
-print(manager.is_submitted("EV_Funciones","pepe"))
-print(manager.is_submitted("EV_Funciones","pepe"))
+
+# print(manager.is_submitted("dsada","dasda"))
+# print(manager.is_submitted("","dasda"))
+# print(manager.is_submitted("EV_Funciones","pepe"))
+# print(manager.is_submitted("EV_Funciones","pepe"))
