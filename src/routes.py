@@ -142,6 +142,10 @@ def student_course(course):
                 flash('Debe seleccionar la tarea correspondiente a este sección: ' + notebook)
                 return(redirect(request.url))
             else:
+                preventive = Calification.query.filter_by(student_id=user.id,task_name=task).first()
+                if preventive:
+                    flash("Tarea entregada previamente")
+                    return(redirect(request.url))
                 flash("Su tarea ha sido enviada")
                 path = "courses/" + course + "/submitted/" + user.name + "/" + task 
                 file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),path ,secure_filename(file.filename)))
@@ -151,11 +155,11 @@ def student_course(course):
                 db.session.add(calification)
                 db.session.commit()
                 manager.closeDB()
+                
 
     
     current_course = Course.query.filter_by(name = course).first()
     sections = get_sections_data(current_course.id, user.id)
-    print (sections)
     return render_template("student/course.html", course = course, name = user.name, sections = sections)
 
 def get_sections_data(course_id, student_id):
@@ -187,19 +191,31 @@ def download_task(course,filename):
     notebook = filename + ".ipynb"
     return send_from_directory(path, notebook, as_attachment=True)
 
-def allowed_file(filename, user):
-    if (user.is_teacher):
-        allowed_extensions = {"ipynb", "pdf"}
-    else:
-        allowed_extensions = {"ipynb"}
-    return '.' in filename and \
-        filename.rsplit(".", 1)[1].lower() in allowed_extensions
-
+@app.route('/student/courses/<string:course>/<string:username>',methods=["GET"])
+@login_required
+def student_course_califications(course, username):
+    current_course = Course.query.filter_by(name = course).first()
+    user = get_current_User(current_user.get_id())
+    sections = Section.query.filter_by(course_id = current_course.id).all()
+    califications = []
+    for section in sections:
+        calification = Calification.query.filter_by(student_id=user.id, section_id=section.id).first()
+        if calification:
+            tmp_list = [section.name,calification]
+            califications.append(tmp_list)
+    return render_template("student/course_califications.html", course = course, name = user.name, califications = califications)
 
 @app.route('/student/califications',methods=["GET"])
 @login_required
 def student_califications():
-    if request.method == 'POST':
-        return None
     user = get_current_User(current_user.get_id())
-    return render_template("student/califications.html", name = user.name)
+    courses = get_student_courses(user.id)
+    califications = []
+    for course in courses:
+        sections = Section.query.filter_by(course_id = course.id).all()
+        for section in sections:
+            calification = Calification.query.filter_by(student_id=user.id, section_id=section.id).first()
+            if calification:
+                tmp_list = [course.name, section.name,calification]
+                califications.append(tmp_list)
+    return render_template("student/califications.html", name = user.name, califications = califications)
