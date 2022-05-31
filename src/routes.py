@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, send_file, send_from_directory
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 from sqlalchemy import false
-from src.forms import LoginForm
+from src.forms import LoginForm, ChagePasswordForm
 from src.management import NbgraderManager
 import webbrowser
 import os
@@ -28,7 +28,7 @@ db.create_all()
 
 # manually added users
 Teacher = User(name = "Profesor 1", username = "Teacher1", password = "1234", is_teacher = True)
-Student1 = User(name = "Alberto", username = "Student1", password = "1234")
+Student1 = User(name = "Alberto", username = "Student1", password = "1234", first_login = True)
 Student2 = User(name = "Pablo", username = "Student2", password = "1234")
 db.session.add(Teacher)
 db.session.add(Student1)
@@ -65,6 +65,8 @@ def login():
                 login_user(user)
                 if user.is_teacher:
                     return redirect(url_for('teacher'))
+                if user.first_login:
+                    return redirect(url_for('student_change_password'))
                 return redirect(url_for('student'))
         flash('usuario no registrado')
         return redirect(url_for('login'))
@@ -219,3 +221,27 @@ def student_califications():
                 tmp_list = [course.name, section.name,calification]
                 califications.append(tmp_list)
     return render_template("student/califications.html", name = user.name, califications = califications)
+
+
+
+@app.route('/student/change_password',methods=["GET", "POST"])
+@login_required
+def student_change_password():
+    form = ChagePasswordForm()
+    user = get_current_User(current_user.get_id())
+    if form.validate_on_submit():
+        if user.password == form.current_password.data:
+            if form.new_password_1.data == form.new_password_2.data:
+                if form.new_password_1.data != user.password:
+                    user.password = form.new_password_1.data
+                    user.first_login = False
+                    db.session.commit()
+                    return redirect(url_for('logout'))
+                flash("La nueva contraseña no puede ser la misma a la actual")
+                return redirect(url_for('student_change_password'))
+            flash("Datos erroneos")
+            redirect(url_for('student_change_password'))
+        flash("Contraseña incorrecta")
+        redirect(url_for('student_change_password'))
+
+    return render_template("student/change_password.html", form = form)

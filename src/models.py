@@ -12,6 +12,7 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(80), nullable=False, unique = True)
     password = db.Column(db.String(80), nullable=False)
     is_teacher = db.Column(db.Boolean, default=False)
+    first_login = db.Column(db.Boolean, default=False)
 
     teacher_course = db.relationship('Course', backref = 'teacher')
     student_calif = db.relationship('Calification', backref = 'student')

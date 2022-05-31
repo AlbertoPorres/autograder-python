@@ -32,7 +32,9 @@ class NbgraderManager:
     def grade(self, task, student):
         self.api.autograde(task,student)
         submision = self.dbConnection.find_submission(task,student)
-        return submision.score
+        # nota sobre 10
+        grade = submision.score * 10 / submision.max_score
+        return grade
 
 
     def is_submitted(self, task, student):
