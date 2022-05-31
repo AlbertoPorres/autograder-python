@@ -1,5 +1,6 @@
 from flask import render_template, request, redirect, url_for, flash, send_file, send_from_directory
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
+from sqlalchemy import false
 from src.forms import LoginForm
 from src.management import NbgraderManager
 import webbrowser
@@ -153,8 +154,26 @@ def student_course(course):
 
     
     current_course = Course.query.filter_by(name = course).first()
-    sections = Section.query.filter_by(course_id = current_course.id).all()
+    sections = get_sections_data(current_course.id, user.id)
+    print (sections)
     return render_template("student/course.html", course = course, name = user.name, sections = sections)
+
+def get_sections_data(course_id, student_id):
+    sections = Section.query.filter_by(course_id =course_id).all()
+    califications = Calification.query.filter_by(student_id = student_id).all()
+    sections_data = []
+    for section in sections:
+        flag = "False"
+        for calification in califications:
+            if calification.section_id == section.id:
+                flag = "True"
+                break
+
+        data_list = [section,flag]
+        sections_data.append(data_list)
+
+    return sections_data
+
 
 
 @app.route('/download_content/<string:course>/<string:filename>')

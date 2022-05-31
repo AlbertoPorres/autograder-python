@@ -4,19 +4,22 @@
     Bienvenido {{ name }} <br>
 
     {% for section in sections %}
-        <h2>{{ section.name }}</h2>
-        <a href="{{ url_for('download_content', course=course, filename=section.content_name) }}"> Descargar contenido teorico de {{ section.name }}</a>
-        <a href="{{ url_for('download_task', course=course, filename=section.task_name) }}"> Descargar tarea de {{ section.name }}
+        <h2>{{ section[0].name }}</h2>
+        <a href="{{ url_for('download_content', course=course, filename=section.content_name) }}"> Descargar contenido teorico de {{ section[0].name }}</a>
+        <a href="{{ url_for('download_task', course=course, filename=section.task_name) }}"> Descargar tarea de {{ section[0].name }}</a>
 
-        </a>
-        <form method = "POST" enctype="multipart/form-data">
-            <input type = file name = file>
-            <input type = hidden name = task value = "{{ section.task_name }}">
-            <input type = hidden name = section value = "{{ section.name }}">
-            <input type= submit value = "Entregar Tarea" >
+        {% if section[1] == "True" %}
+            <div>Ya ha entregado esta tarea</div>
+        {% else %}
+            <form method = "POST" enctype="multipart/form-data">
+                <input type = file name = file>
+                <input type = hidden name = task value = "{{ section[0].task_name }}">
+                <input type = hidden name = section value = "{{ section[0].id }}">
+                <input type= submit value = "Entregar Tarea" >
 
-        </form>
-        <br>
+            </form>
+            <br>
+        {% endif %}
 
 
 
