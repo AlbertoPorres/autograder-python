@@ -1,3 +1,4 @@
+from operator import is_
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from src import db
@@ -17,6 +18,21 @@ class User(db.Model, UserMixin):
     teacher_course = db.relationship('Course', backref = 'teacher')
     student_calif = db.relationship('Calification', backref = 'student')
     student_course = db.relationship('CourseMembers', backref = 'student')
+
+    def __init__(self, name, username, password, is_teacher = False, first_login = False):
+        self.name = name
+        self.username = username
+        self.password = generate_password_hash(password)
+        self.is_teacher = is_teacher
+        self.first_login = first_login
+
+    def verify_password(self,pswd):
+        return check_password_hash(self.password, pswd)
+
+    def change_password(self,new_password):
+        self.password = generate_password_hash(new_password)
+
+
 
 class Course(db.Model):
     id = db.Column(db.Integer, primary_key=True)

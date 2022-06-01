@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash, send_file, send_from_directory
+from flask import render_template, request, redirect, url_for, flash, send_from_directory
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 from sqlalchemy import false
 from src.forms import LoginForm, ChagePasswordForm
@@ -8,7 +8,6 @@ import os
 from src.models import User, Course, Section, Calification, CourseMembers
 from src import app, db
 from werkzeug.utils import secure_filename
-
 
 #Login manager
 login_manager = LoginManager()
@@ -61,7 +60,7 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user:
-            if user.password == form.password.data:
+            if user.verify_password(form.password.data):
                 login_user(user)
                 if user.is_teacher:
                     return redirect(url_for('teacher'))
@@ -149,10 +148,10 @@ def student_course(course):
                     flash("Tarea entregada previamente")
                     return(redirect(request.url))
                 flash("Su tarea ha sido enviada")
-                path = "courses/" + course + "/submitted/" + user.name + "/" + task 
+                path = "courses/" + course + "/submitted/" + user.username + "/" + task 
                 file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),path ,secure_filename(file.filename)))
                 manager = NbgraderManager(course)
-                score = manager.grade(task,user.name)
+                score = manager.grade(task,user.username)
                 calification = Calification(student_id = user.id, section_id = section, task_name = task, value = score)
                 db.session.add(calification)
                 db.session.commit()
@@ -230,17 +229,20 @@ def student_change_password():
     form = ChagePasswordForm()
     user = get_current_User(current_user.get_id())
     if form.validate_on_submit():
-        if user.password == form.current_password.data:
-            if form.new_password_1.data == form.new_password_2.data:
-                if form.new_password_1.data != user.password:
-                    user.password = form.new_password_1.data
+        password = form.current_password.data
+        new_password_1 = form.new_password_1.data
+        new_password_2 = form.new_password_2.data
+        if user.verify_password(password):
+            if new_password_1 == new_password_2:
+                if new_password_1 != password:
+                    user.change_password(new_password_1)
                     user.first_login = False
                     db.session.commit()
                     return redirect(url_for('logout'))
                 flash("La nueva contraseña no puede ser la misma a la actual")
                 return redirect(url_for('student_change_password'))
             flash("Datos erroneos")
-            redirect(url_for('student_change_password'))
+            return redirect(url_for('student_change_password'))
         flash("Contraseña incorrecta")
         redirect(url_for('student_change_password'))
 
