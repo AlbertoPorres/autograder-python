@@ -3,5 +3,13 @@
 {% block content %}
     Bienvenido {{ name }} <br>
     <a href="student/courses"> Ir a mis Cursos</a> <br>
-    <a href="student/califications"> Ir a mis Calificaciones</a>
+    <a href="student/califications"> Ir a mis Calificaciones</a> <br>
+
+    <form action = "/logout">
+        <input type = submit value = "Cerrar sesion">
+    </form>
+
+    <form action = "/student/change_password">
+        <input type = submit value = "Cambiar contraseña">
+    </form>
 {% endblock %}  

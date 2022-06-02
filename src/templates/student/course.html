@@ -5,8 +5,8 @@
 
     {% for section in sections %}
         <h2>{{ section[0].name }}</h2>
-        <a href="{{ url_for('download_content', course=course, filename=section.content_name) }}"> Descargar contenido teorico de {{ section[0].name }}</a>
-        <a href="{{ url_for('download_task', course=course, filename=section.task_name) }}"> Descargar tarea de {{ section[0].name }}</a>
+        <a href="{{ url_for('download_content', course=course, filename=section[0].content_name) }}"> Descargar contenido teorico de {{ section[0].name }}</a>
+        <a href="{{ url_for('download_task', course=course, filename=section[0].task_name) }}"> Descargar tarea de {{ section[0].name }}</a>
 
         {% if section[1] == "True" %}
             <div>Ya ha entregado esta tarea</div>

@@ -1,10 +1,17 @@
 {% extends "base_template.html" %}
-{% block title %}Login page{% endblock %}
+{% block title %}Teacher Main Page{% endblock %}
 {% block content %}
-TEACHERS MAIN PAGE
-<form method="post" action="">
-    <input type="submit" value="RUN NOTEBOOK" name="action1"/>
-    <input type="submit" value="STOP NOTEBOOK" name="action2"/>
-    <input type="submit" value="OPENTAB" name="action3"/>
-</form>
+    Bienvenido {{ name }} <br>
+    <a href="teacher/courses"> Ir a mis Cursos</a> <br>
+    <a href="teacher/califications"> Ir a las Calificaciones</a> <br>
+    <a href="teacher/students"> Ir a la gestion de alumnos</a> <br>
+
+
+    <form action = "/logout">
+        <input type = submit value = "Cerrar sesion">
+    </form>
+
+    <form action = "/teacher/change_password">
+        <input type = submit value = "Cambiar contraseña">
+    </form>
 {% endblock %}  

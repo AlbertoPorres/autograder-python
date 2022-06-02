@@ -1,3 +1,4 @@
+from crypt import methods
 from flask import render_template, request, redirect, url_for, flash, send_from_directory
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 from sqlalchemy import false
@@ -51,7 +52,24 @@ db.session.add(student_enroll1)
 db.session.add(student_enroll2)
 db.session.commit()
 
+
+def check_access(user_type):
+    user = get_current_User(current_user.get_id())
+    if user_type == "teacher":
+        if user.is_teacher:
+            return True
+        else:
+            return False
+    elif user_type == "student":
+        if not user.is_teacher:
+            return True
+        else:
+            return False
+    
 # ROUTES
+@app.route('/',methods=["GET"])
+def index():
+    return render_template("index.html")
 
 @app.route('/login',methods=["GET", "POST"])
 def login():
@@ -78,42 +96,38 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-@app.route('/teacher',methods=["GET", "POST"])
+@app.route('/teacher',methods=["GET"])
 @login_required
 def teacher():
-    # TEST DE APERTURA DE NOTEBOOKS CON JUPYTER DESDE LA PAGINA PRINCIPAL DEL MAESTRO
-    if request.method == 'POST':
-        if request.form.get('action1') == 'RUN NOTEBOOK':
-            #subprocess.Popen("jupyter notebook --ip='0.0.0.0' --port=8888")
-            os.system("jupyter notebook --ip='0.0.0.0' --no-browser --allow-root --port=8888 &")
-            #time.sleep(4)
-            #webbrowser.open_new_tab("http://127.0.0.1:8888/notebooks/Curso%20Python%20V.0.ipynb")
-            #webbrowser.open_new_tab("https://www.google.com/")
-        if request.form.get('action2') == 'STOP NOTEBOOK':
-            os.system("pkill -f -1 jupyter*")
-            #subprocess.Popen("jupyter notebook stop 8888")
+    if check_access("teacher"):
+        user = get_current_User(current_user.get_id())
+        return render_template("teacher.html", name = user.name)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
 
-        if request.form.get('action3') == 'OPENTAB':
-            webbrowser.open_new_tab("https://www.google.com/")
-            #subprocess.Popen("jupyter notebook stop 8888")
-    return render_template("teacher.html")
-
-@app.route('/student',methods=["GET", "POST"])
+@app.route('/student',methods=["GET"])
 @login_required
 def student():
-    if request.method == 'POST':
-        return None
-    user = get_current_User(current_user.get_id())
-    return render_template("student.html", name = user.name)
+    if check_access("student"):
+        check_access("student")
+        user = get_current_User(current_user.get_id())
+        return render_template("student.html", name = user.name)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('teacher'))
 
 
 @app.route('/student/courses',methods=["GET"])
 @login_required
 def student_courses():
-    if request.method == 'POST':
-        return None
-    user = get_current_User(current_user.get_id())
-    return render_template("student/courses.html", name = user.name, courses = get_student_courses(user.id))
+    if check_access("student"):
+        user = get_current_User(current_user.get_id())
+        return render_template("student/courses.html", name = user.name, courses = get_student_courses(user.id))
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('teacher'))
+
 
 
 
@@ -130,38 +144,40 @@ def get_student_courses(student_id):
 @app.route('/student/courses/<string:course>',methods=["GET", "POST"])
 @login_required
 def student_course(course):
+    if check_access("student"):
+        user = get_current_User(current_user.get_id())
 
-    user = get_current_User(current_user.get_id())
-
-    if request.method == 'POST':
-        if request.files:
-            file = request.files['file']
-            task = request.form.get('task')
-            section = request.form.get('section')
-            notebook = task + ".ipynb"
-            if file.filename != notebook:
-                flash('Debe seleccionar la tarea correspondiente a este sección: ' + notebook)
-                return(redirect(request.url))
-            else:
-                preventive = Calification.query.filter_by(student_id=user.id,task_name=task).first()
-                if preventive:
-                    flash("Tarea entregada previamente")
+        if request.method == 'POST':
+            if request.files:
+                file = request.files['file']
+                task = request.form.get('task')
+                section = request.form.get('section')
+                notebook = task + ".ipynb"
+                if file.filename != notebook:
+                    flash('Debe seleccionar la tarea correspondiente a este sección: ' + notebook)
                     return(redirect(request.url))
-                flash("Su tarea ha sido enviada")
-                path = "courses/" + course + "/submitted/" + user.username + "/" + task 
-                file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),path ,secure_filename(file.filename)))
-                manager = NbgraderManager(course)
-                score = manager.grade(task,user.username)
-                calification = Calification(student_id = user.id, section_id = section, task_name = task, value = score)
-                db.session.add(calification)
-                db.session.commit()
-                manager.closeDB()
-                
-
-    
-    current_course = Course.query.filter_by(name = course).first()
-    sections = get_sections_data(current_course.id, user.id)
-    return render_template("student/course.html", course = course, name = user.name, sections = sections)
+                else:
+                    preventive = Calification.query.filter_by(student_id=user.id,task_name=task).first()
+                    if preventive:
+                        flash("Tarea entregada previamente")
+                        return(redirect(request.url))
+                    else:
+                        flash("Su tarea ha sido enviada")
+                        path = "courses/" + course + "/submitted/" + user.username + "/" + task 
+                        file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),path ,secure_filename(file.filename)))
+                        manager = NbgraderManager(course)
+                        score = manager.grade(task,user.username)
+                        calification = Calification(student_id = user.id, section_id = section, task_name = task, value = score)
+                        db.session.add(calification)
+                        db.session.commit()
+                        manager.closeDB()
+                    
+        current_course = Course.query.filter_by(name = course).first()
+        sections = get_sections_data(current_course.id, user.id)
+        return render_template("student/course.html", course = course, name = user.name, sections = sections)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('teacher'))
 
 def get_sections_data(course_id, student_id):
     sections = Section.query.filter_by(course_id =course_id).all()
@@ -173,77 +189,119 @@ def get_sections_data(course_id, student_id):
             if calification.section_id == section.id:
                 flag = "True"
                 break
-
         data_list = [section,flag]
         sections_data.append(data_list)
-
     return sections_data
 
 
 
 @app.route('/download_content/<string:course>/<string:filename>')
+@login_required
 def download_content(course,filename):
-    path = "courses/" + course + "/content"
-    return send_from_directory(path, filename, as_attachment=True)
+    if check_access("student"):
+        path = "courses/" + course + "/content"
+        return send_from_directory(path, filename, as_attachment=True)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('teacher'))
 
 @app.route('/download_task/<string:course>/<string:filename>')
+@login_required
 def download_task(course,filename):
-    path = "courses/" + course + "/release/" + filename
-    notebook = filename + ".ipynb"
-    return send_from_directory(path, notebook, as_attachment=True)
+    if check_access("student"):
+        path = "courses/" + course + "/release/" + filename
+        notebook = filename + ".ipynb"
+        return send_from_directory(path, notebook, as_attachment=True)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('teacher'))
 
 @app.route('/student/courses/<string:course>/<string:username>',methods=["GET"])
 @login_required
 def student_course_califications(course, username):
-    current_course = Course.query.filter_by(name = course).first()
-    user = get_current_User(current_user.get_id())
-    sections = Section.query.filter_by(course_id = current_course.id).all()
-    califications = []
-    for section in sections:
-        calification = Calification.query.filter_by(student_id=user.id, section_id=section.id).first()
-        if calification:
-            tmp_list = [section.name,calification]
-            califications.append(tmp_list)
-    return render_template("student/course_califications.html", course = course, name = user.name, califications = califications)
+    if check_access("student"):
+        current_course = Course.query.filter_by(name = course).first()
+        user = get_current_User(current_user.get_id())
+        sections = Section.query.filter_by(course_id = current_course.id).all()
+        califications = []
+        for section in sections:
+            calification = Calification.query.filter_by(student_id=user.id, section_id=section.id).first()
+            if calification:
+                tmp_list = [section.name,calification]
+                califications.append(tmp_list)
+        return render_template("student/course_califications.html", course = course, name = user.name, califications = califications)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('teacher'))
 
 @app.route('/student/califications',methods=["GET"])
 @login_required
 def student_califications():
-    user = get_current_User(current_user.get_id())
-    courses = get_student_courses(user.id)
-    califications = []
-    for course in courses:
-        sections = Section.query.filter_by(course_id = course.id).all()
-        for section in sections:
-            calification = Calification.query.filter_by(student_id=user.id, section_id=section.id).first()
-            if calification:
-                tmp_list = [course.name, section.name,calification]
-                califications.append(tmp_list)
-    return render_template("student/califications.html", name = user.name, califications = califications)
+    if check_access("student"):
+        user = get_current_User(current_user.get_id())
+        courses = get_student_courses(user.id)
+        califications = []
+        for course in courses:
+            sections = Section.query.filter_by(course_id = course.id).all()
+            for section in sections:
+                calification = Calification.query.filter_by(student_id=user.id, section_id=section.id).first()
+                if calification:
+                    tmp_list = [course.name, section.name,calification]
+                    califications.append(tmp_list)
+        return render_template("student/califications.html", name = user.name, califications = califications)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('teacher'))
 
 
 
 @app.route('/student/change_password',methods=["GET", "POST"])
 @login_required
 def student_change_password():
-    form = ChagePasswordForm()
-    user = get_current_User(current_user.get_id())
-    if form.validate_on_submit():
-        password = form.current_password.data
-        new_password_1 = form.new_password_1.data
-        new_password_2 = form.new_password_2.data
-        if user.verify_password(password):
-            if new_password_1 == new_password_2:
-                if new_password_1 != password:
-                    user.change_password(new_password_1)
-                    user.first_login = False
-                    db.session.commit()
-                    return redirect(url_for('logout'))
-                flash("La nueva contraseña no puede ser la misma a la actual")
+    if check_access("student"):
+        form = ChagePasswordForm()
+        user = get_current_User(current_user.get_id())
+        if form.validate_on_submit():
+            password = form.current_password.data
+            new_password_1 = form.new_password_1.data
+            new_password_2 = form.new_password_2.data
+            if user.verify_password(password):
+                if new_password_1 == new_password_2:
+                    if new_password_1 != password:
+                        user.change_password(new_password_1)
+                        user.first_login = False
+                        db.session.commit()
+                        return redirect(url_for('logout'))
+                    flash("La nueva contraseña no puede ser la misma a la actual")
+                    return redirect(url_for('student_change_password'))
+                flash("Datos erroneos")
                 return redirect(url_for('student_change_password'))
-            flash("Datos erroneos")
-            return redirect(url_for('student_change_password'))
-        flash("Contraseña incorrecta")
-        redirect(url_for('student_change_password'))
+            flash("Contraseña incorrecta")
+            redirect(url_for('student_change_password'))
+        return render_template("student/change_password.html", form = form)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('teacher'))
 
-    return render_template("student/change_password.html", form = form)
+
+
+
+# @app.route('/teacher',methods=["GET", "POST"])
+# @login_required
+# def teacher():
+#     # TEST DE APERTURA DE NOTEBOOKS CON JUPYTER DESDE LA PAGINA PRINCIPAL DEL MAESTRO
+#     if request.method == 'POST':
+#         if request.form.get('action1') == 'RUN NOTEBOOK':
+#             #subprocess.Popen("jupyter notebook --ip='0.0.0.0' --port=8888")
+#             os.system("jupyter notebook --ip='0.0.0.0' --no-browser --allow-root --port=8888 &")
+#             #time.sleep(4)
+#             #webbrowser.open_new_tab("http://127.0.0.1:8888/notebooks/Curso%20Python%20V.0.ipynb")
+#             #webbrowser.open_new_tab("https://www.google.com/")
+#         if request.form.get('action2') == 'STOP NOTEBOOK':
+#             os.system("pkill -f -1 jupyter*")
+#             #subprocess.Popen("jupyter notebook stop 8888")
+
+#         if request.form.get('action3') == 'OPENTAB':
+#             webbrowser.open_new_tab("https://www.google.com/")
+#             #subprocess.Popen("jupyter notebook stop 8888")
+#     return render_template("teacher.html")
