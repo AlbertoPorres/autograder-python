@@ -1,0 +1,25 @@
+{% extends "base_template.html" %}
+{% block title %}Change password{% endblock %}
+{% block content %}
+<form action="" method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <div>
+        {{ form.name.label }}
+        {{ form.name(size=32) }}<br>
+    </div>
+    <div>
+        {{ form.username.label }}
+        {{ form.username(size=32) }}<br>
+    </div>
+    <div>
+        {{ form.password.label }}
+        {{ form.password }}<br>
+    </div>
+    <div>
+        {{ form.confirm_password.label }}
+        {{ form.confirm_password }}<br>
+    </div>
+        {{ form.submit() }}
+    </div>
+</form>
+{% endblock %}  

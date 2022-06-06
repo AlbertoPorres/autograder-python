@@ -15,3 +15,11 @@ class ChagePasswordForm(FlaskForm):
     new_password_1 = PasswordField('Nueva contraseña', validators=[DataRequired()])
     new_password_2 = PasswordField('Repita la nueva contraseña', validators=[DataRequired()])
     submit = SubmitField('Cambiar contraseña')
+
+
+class CreateStudentForm(FlaskForm):
+    name = StringField('Nombre del alumno', validators=[DataRequired(), Length(max=32)])
+    username = StringField('Nombre de usuario del alumno', validators=[DataRequired(), Length(max=32)])
+    password = PasswordField('Contraseña temporal', validators=[DataRequired()])
+    confirm_password = PasswordField('Repita la contraseña', validators=[DataRequired()])
+    submit = SubmitField('Crear alumno')

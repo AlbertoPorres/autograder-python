@@ -1,0 +1,26 @@
+{% extends "base_template.html" %}
+{% block title %}Teacher Students student{% endblock %}
+
+{% block content %}
+    <h2>{{ name }}</h2>  <br>
+    <h2>Alumno: {{ student }}</h2>  <br>
+    
+    
+    <table>
+        <tr>
+            <th>Curso</th>
+            <th>Seccion</th>
+            <th>Tarea</th>
+            <th>Calificacion</th>
+        </tr>
+    {% for calification in califications %}
+        <tr>
+            <td>{{ calification[0] }}</td>
+            <td>{{ calification[1] }}</td>
+            <td>{{ calification[2].task_name }}</td>
+            <td>{{ calification[2].value }}</td>
+        </tr>
+
+    {% endfor %}
+    </table>
+{% endblock %}  

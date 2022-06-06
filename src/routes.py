@@ -2,9 +2,8 @@ from crypt import methods
 from flask import render_template, request, redirect, url_for, flash, send_from_directory
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 from sqlalchemy import false
-from src.forms import LoginForm, ChagePasswordForm
+from src.forms import LoginForm, ChagePasswordForm, CreateStudentForm
 from src.management import NbgraderManager
-import webbrowser
 import os
 from src.models import User, Course, Section, Calification, CourseMembers
 from src import app, db
@@ -19,14 +18,11 @@ login_manager.login_view = "login"
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-def get_current_User(id):
-    return User.query.filter_by(id=id).first() 
-
 
 db.drop_all()
 db.create_all()
 
-# manually added users
+# manually added db rows
 Teacher = User(name = "Profesor 1", username = "Teacher1", password = "1234", is_teacher = True)
 Student1 = User(name = "Alberto", username = "Student1", password = "1234", first_login = True)
 Student2 = User(name = "Pablo", username = "Student2", password = "1234")
@@ -53,19 +49,6 @@ db.session.add(student_enroll2)
 db.session.commit()
 
 
-def check_access(user_type):
-    user = get_current_User(current_user.get_id())
-    if user_type == "teacher":
-        if user.is_teacher:
-            return True
-        else:
-            return False
-    elif user_type == "student":
-        if not user.is_teacher:
-            return True
-        else:
-            return False
-    
 # ROUTES
 @app.route('/',methods=["GET"])
 def index():
@@ -106,11 +89,79 @@ def teacher():
         flash("Acceso no permitido")
         return redirect(url_for('student'))
 
+
+@app.route('/teacher/change_password',methods=["GET", "POST"])
+@login_required
+def teacher_change_password():
+    if check_access("teacher"):
+        form = ChagePasswordForm()
+        user = get_current_User(current_user.get_id())
+        if form.validate_on_submit():
+            password = form.current_password.data
+            new_password_1 = form.new_password_1.data
+            new_password_2 = form.new_password_2.data
+            if user.verify_password(password):
+                if new_password_1 == new_password_2:
+                    if new_password_1 != password:
+                        user.change_password(new_password_1)
+                        user.first_login = False
+                        db.session.commit()
+                        return redirect(url_for('logout'))
+                    flash("La nueva contraseña no puede ser la misma a la actual")
+                    return redirect(url_for('teacher_change_password'))
+                flash("Datos erroneos")
+                return redirect(url_for('teacher_change_password'))
+            flash("Contraseña incorrecta")
+            redirect(url_for('teacher_change_password'))
+        return render_template("teacher/change_password.html", form = form)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+
+@app.route('/teacher/students',methods=["GET"])
+@login_required
+def teacher_students():
+    if check_access("teacher"):
+        user = get_current_User(current_user.get_id())
+        students = get_teacher_students(user.id)
+        return render_template("teacher/students.html", name = user.name, students = students)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+@app.route('/teacher/create_student',methods=["GET"])
+@login_required
+def teacher_create_student():
+    if check_access("teacher"):
+        user = get_current_User(current_user.get_id())
+        form = CreateStudentForm()
+        if form.validate_on_submit():
+            None 
+            #TODO
+        return render_template("teacher/create_student.html", name = user.name, form = form)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+@app.route('/teacher/students/<string:student>',methods=["GET"])
+@login_required
+def teacher_students_student(student):
+    if check_access("teacher"):
+        user = get_current_User(current_user.get_id())
+        student = User.query.filter_by(username = student).first()
+        courses = get_student_courses(student.id)
+        califications = get_student_califications(student, courses)
+        return render_template("teacher/student.html", name = user.name, student = student.username, califications = califications)
+
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
 @app.route('/student',methods=["GET"])
 @login_required
 def student():
     if check_access("student"):
-        check_access("student")
         user = get_current_User(current_user.get_id())
         return render_template("student.html", name = user.name)
     else:
@@ -127,17 +178,6 @@ def student_courses():
     else:
         flash("Acceso no permitido")
         return redirect(url_for('teacher'))
-
-
-
-
-# LISTA DE TODOS LOS CURSOS DE UN ALUMNO
-def get_student_courses(student_id):
-    courses = []
-    relationships = CourseMembers.query.filter_by(student_id = student_id).all()
-    for relationship in relationships:
-        courses.append(Course.query.filter_by(id = relationship.course_id).first())
-    return courses
 
 
 
@@ -178,20 +218,6 @@ def student_course(course):
     else:
         flash("Acceso no permitido")
         return redirect(url_for('teacher'))
-
-def get_sections_data(course_id, student_id):
-    sections = Section.query.filter_by(course_id =course_id).all()
-    califications = Calification.query.filter_by(student_id = student_id).all()
-    sections_data = []
-    for section in sections:
-        flag = "False"
-        for calification in califications:
-            if calification.section_id == section.id:
-                flag = "True"
-                break
-        data_list = [section,flag]
-        sections_data.append(data_list)
-    return sections_data
 
 
 
@@ -240,14 +266,7 @@ def student_califications():
     if check_access("student"):
         user = get_current_User(current_user.get_id())
         courses = get_student_courses(user.id)
-        califications = []
-        for course in courses:
-            sections = Section.query.filter_by(course_id = course.id).all()
-            for section in sections:
-                calification = Calification.query.filter_by(student_id=user.id, section_id=section.id).first()
-                if calification:
-                    tmp_list = [course.name, section.name,calification]
-                    califications.append(tmp_list)
+        califications = get_student_califications(user, courses)
         return render_template("student/califications.html", name = user.name, califications = califications)
     else:
         flash("Acceso no permitido")
@@ -284,6 +303,74 @@ def student_change_password():
         return redirect(url_for('teacher'))
 
 
+# METODOS ADICIONALES DE FUNCIONAMIENTO
+
+def get_current_User(id):
+    return User.query.filter_by(id=id).first() 
+
+# LISTA DE TODOS LOS CURSOS DE UN ALUMNO
+def get_student_courses(student_id):
+    courses = []
+    relationships = CourseMembers.query.filter_by(student_id = student_id).all()
+    for relationship in relationships:
+        courses.append(Course.query.filter_by(id = relationship.course_id).first())
+    return courses
+
+def get_teacher_courses(teacher_id):
+    return Course.query.filter_by(teacher_id = teacher_id).all()
+
+def get_student_califications(user, courses):
+    califications = []
+    for course in courses:
+            sections = Section.query.filter_by(course_id = course.id).all()
+            for section in sections:
+                calification = Calification.query.filter_by(student_id=user.id, section_id=section.id).first()
+                if calification:
+                    tmp_list = [course.name, section.name,calification]
+                    califications.append(tmp_list)
+    return califications
+
+
+
+def get_sections_data(course_id, student_id):
+    sections = Section.query.filter_by(course_id =course_id).all()
+    califications = Calification.query.filter_by(student_id = student_id).all()
+    sections_data = []
+    for section in sections:
+        flag = "False"
+        for calification in califications:
+            if calification.section_id == section.id:
+                flag = "True"
+                break
+        data_list = [section,flag]
+        sections_data.append(data_list)
+    return sections_data
+
+
+def check_access(user_type):
+    user = get_current_User(current_user.get_id())
+    if user_type == "teacher":
+        if user.is_teacher:
+            return True
+        else:
+            return False
+    elif user_type == "student":
+        if not user.is_teacher:
+            return True
+        else:
+            return False
+    
+def get_teacher_students(teacher_id):
+    courses = get_teacher_courses(teacher_id)
+    relationships = []
+    alumnos = []
+    for course in courses:
+        relationship = CourseMembers.query.filter_by(course_id=course.id).all()
+        for relation in relationship:
+            relationships.append(relation)
+    for relationship_ in relationships:
+        alumnos.append(User.query.filter_by(id = relationship_.student_id).first())
+    return alumnos
 
 
 # @app.route('/teacher',methods=["GET", "POST"])
