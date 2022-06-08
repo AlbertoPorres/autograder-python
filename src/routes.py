@@ -1,7 +1,7 @@
-from crypt import methods
+import shutil
 from flask import render_template, request, redirect, url_for, flash, send_from_directory
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
-from sqlalchemy import false
+from pyparsing import removeQuotes
 from src.forms import LoginForm, ChagePasswordForm, CreateStudentForm
 from src.management import NbgraderManager
 import os
@@ -107,9 +107,9 @@ def teacher_change_password():
                         user.first_login = False
                         db.session.commit()
                         return redirect(url_for('logout'))
-                    flash("La nueva contraseña no puede ser la misma a la actual")
+                    flash("La nueva contraseña no puede ser la misma que la actual")
                     return redirect(url_for('teacher_change_password'))
-                flash("Datos erroneos")
+                flash("Las contraseñas han de coincidir")
                 return redirect(url_for('teacher_change_password'))
             flash("Contraseña incorrecta")
             redirect(url_for('teacher_change_password'))
@@ -124,39 +124,99 @@ def teacher_change_password():
 def teacher_students():
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
-        students = get_teacher_students(user.id)
-        return render_template("teacher/students.html", name = user.name, students = students)
+        enrrolled = get_teacher_students(user.id)
+        return render_template("teacher/students.html", name = user.name, enrrolled = enrrolled)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
 
-@app.route('/teacher/create_student',methods=["GET"])
+
+@app.route('/delete_student/<string:student_id>')
+@login_required
+def delete_student(student_id):
+    if check_access("teacher"):
+        student = User.query.filter_by(id = student_id).first()
+        courses = get_student_courses(student_id)
+        relationships = CourseMembers.query.filter_by(student_id = student_id).all()
+        califications = Calification.query.filter_by(student_id = student_id).all()
+        for course in courses:
+            path = "courses/" + course.name + "/submitted/" + student.username
+            path_ = os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
+            shutil.rmtree(path_)
+            manager = NbgraderManager(course.name)
+            manager.remove_student(student.username)
+            manager.closeDB()
+        for relation in relationships:
+            db.session.delete(relation)
+        for calification in califications:
+            db.session.delete(calification)
+        db.session.delete(student)
+        db.session.commit()
+        return redirect(url_for('teacher_students'))
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+
+
+@app.route('/teacher/create_student',methods=["GET","POST"])
 @login_required
 def teacher_create_student():
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         form = CreateStudentForm()
         if form.validate_on_submit():
-            None 
-            #TODO
-        return render_template("teacher/create_student.html", name = user.name, form = form)
+            name = form.name.data
+            username = form.username.data
+            password1 = form.password.data
+            password2 = form.confirm_password.data
+            course_value = request.form.get("courses")
+            if course_value != None:
+                course = Course.query.filter_by(name = course_value).first()
+                if password1 == password2:
+                    try:
+                        user = User(name = name, username = username, password = password1, first_login=True)
+                        db.session.add(user)
+                        db.session.commit()
+                        relationship = CourseMembers(course_id = course.id, student_id = user.id)
+                        db.session.add(relationship)
+                        db.session.commit()
+                        make_dir_submissions(course.name, user.username)
+                        manager = NbgraderManager(course.name)
+                        manager.add_student(user.username)
+                        flash("Usuario creado correctamente")
+                        return redirect(url_for('teacher_students'))
+                    except Exception as e:
+                        db.session.rollback()
+                        flash("Usuario ya existente")
+                else:
+                    flash("Las contraseñas han de coincidir")
+            else:
+                flash("Debe seleccionar un curso")
+        courses = get_teacher_courses(user.id)
+        return render_template("teacher/create_student.html", name = user.name, form = form, courses = courses)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
 
-@app.route('/teacher/students/<string:student>',methods=["GET"])
+@app.route('/teacher/students/<string:student>',methods=["GET", "POST"])
 @login_required
 def teacher_students_student(student):
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         student = User.query.filter_by(username = student).first()
+        if not student:
+            return redirect(url_for("teacher_students"))
+        if request.method == 'POST':
+            return redirect(url_for('delete_student', student_id = student.id))
         courses = get_student_courses(student.id)
         califications = get_student_califications(student, courses)
         return render_template("teacher/student.html", name = user.name, student = student.username, califications = califications)
-
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
+
+
 
 @app.route('/student',methods=["GET"])
 @login_required
@@ -371,6 +431,12 @@ def get_teacher_students(teacher_id):
     for relationship_ in relationships:
         alumnos.append(User.query.filter_by(id = relationship_.student_id).first())
     return alumnos
+
+
+def make_dir_submissions(course, username):
+    path = "courses/" + course + "/submitted/" + username
+    path_ = os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
+    os.mkdir(path_)
 
 
 # @app.route('/teacher',methods=["GET", "POST"])

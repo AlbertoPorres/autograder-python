@@ -2,29 +2,28 @@
 {% block title %}Teacher Students Page{% endblock %}
 {% block content %}
     <h2>{{ name }}</h2>  <br>
-    <h2>Alumnos a su cargo:</h2>  <br>
+    <h2>Alumnos pertenecientes a sus cursos:</h2> 
+    <br><br>
     <table>
         <tr>
             <th>Nombre</th>
             <th>Nombre de usuario</th>
-            <th></th>
 
         </tr>
-    {% for student in students %}
+    {% for enrroll in enrrolled %}
         <tr>
-            <td><a href="{{ url_for('teacher_students_student', student=student.username) }}">{{ student.name }}</a></td>
-            <td>{{  student.username  }}</td>
-            <td>
-                <form action = "/teacher">
-                    <input type = submit value = "Eliminar">
-                </form>
-            </td>
+            <td><a href="{{ url_for('teacher_students_student', student=enrroll.username) }}">{{ enrroll.name }}</a></td>
+            <td>{{  enrroll.username  }}</td>
         </tr>
 
     {% endfor %}
     </table>
+ 
 
-    <form action = "/teacher/create_student">
-        <input type = submit value = "Crear nuevo alumno">
-    </form>
+
+<form action = "/teacher/create_student">
+    <input type = submit value = "Crear nuevo alumno">
+</form>
+
+    
 {% endblock %}  
