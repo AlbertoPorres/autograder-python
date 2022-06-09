@@ -45,12 +45,13 @@ class NbgraderManager:
         else:
             return True
 
+
+    def create_assigment(self, task):
+        self.api.generate_assignment(task)
+
+    def release_assigment(self, task):
+        self.api.release_assignment(task)
+
+
     def closeDB(self):
         self.dbConnection.close()
-        
-
-
-# print(manager.is_submitted("dsada","dasda"))
-# print(manager.is_submitted("","dasda"))
-# print(manager.is_submitted("EV_Funciones","pepe"))
-# print(manager.is_submitted("EV_Funciones","pepe"))

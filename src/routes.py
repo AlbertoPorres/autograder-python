@@ -19,34 +19,34 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-db.drop_all()
-db.create_all()
+# db.drop_all()
+# db.create_all()
 
-# manually added db rows
-Teacher = User(name = "Profesor 1", username = "Teacher1", password = "1234", is_teacher = True)
-Student1 = User(name = "Alberto", username = "Student1", password = "1234", first_login = True)
-Student2 = User(name = "Pablo", username = "Student2", password = "1234")
-db.session.add(Teacher)
-db.session.add(Student1)
-db.session.add(Student2)
-db.session.commit()
+# # manually added db rows
+# Teacher = User(name = "Profesor 1", username = "Teacher1", password = "1234", is_teacher = True)
+# Student1 = User(name = "Alberto", username = "Student1", password = "1234", first_login = True)
+# Student2 = User(name = "Pablo", username = "Student2", password = "1234")
+# db.session.add(Teacher)
+# db.session.add(Student1)
+# db.session.add(Student2)
+# db.session.commit()
 
-course = Course(teacher_id = Teacher.id, name = "Curso de Python", description = "Curso básico de python" )
-db.session.add(course)
-db.session.commit()
+# course = Course(teacher_id = Teacher.id, name = "Curso de Python", description = "Curso básico de python" )
+# db.session.add(course)
+# db.session.commit()
 
-section1 = Section(course_id = course.id, name = "Introduccion a Python", content_name = "T_Introduccion.ipynb", task_name = "EV_Introduccion")
-section2 = Section(course_id = course.id, name = "Funciones en Python", content_name = "T_Funciones.ipynb", task_name = "EV_Funciones")
+# section1 = Section(course_id = course.id, name = "Introduccion a Python", content_name = "T_Introduccion.ipynb", task_name = "EV_Introduccion")
+# section2 = Section(course_id = course.id, name = "Funciones en Python", content_name = "T_Funciones.ipynb", task_name = "EV_Funciones")
 
-db.session.add(section1)
-db.session.add(section2)
-db.session.commit()
+# db.session.add(section1)
+# db.session.add(section2)
+# db.session.commit()
 
-student_enroll1 = CourseMembers(course_id = course.id, student_id = Student1.id)
-student_enroll2 = CourseMembers(course_id = course.id, student_id = Student2.id)
-db.session.add(student_enroll1)
-db.session.add(student_enroll2)
-db.session.commit()
+# student_enroll1 = CourseMembers(course_id = course.id, student_id = Student1.id)
+# student_enroll2 = CourseMembers(course_id = course.id, student_id = Student2.id)
+# db.session.add(student_enroll1)
+# db.session.add(student_enroll2)
+# db.session.commit()
 
 
 # ROUTES
@@ -76,6 +76,9 @@ def login():
 @app.route('/logout',methods=["GET", "POST"])
 @login_required
 def logout():
+    user = get_current_User(current_user.get_id())
+    if user.is_teacher:
+        os.system("pkill -f -1 jupyter*")
     logout_user()
     return redirect(url_for('login'))
 
@@ -118,6 +121,30 @@ def teacher_change_password():
         flash("Acceso no permitido")
         return redirect(url_for('student'))
 
+
+@app.route('/teacher/courses',methods=["GET"])
+@login_required
+def teacher_courses():
+    if check_access("teacher"):
+        user = get_current_User(current_user.get_id())
+        courses = Course.query.filter_by(teacher_id = user.id).all()
+        return render_template("teacher/courses.html", name = user.name, courses = courses)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+
+
+@app.route('/teacher/califications',methods=["GET"])
+@login_required
+def teacher_califications():
+    if check_access("teacher"):
+        user = get_current_User(current_user.get_id())
+        califications = get_teachers_califications(user.id)
+        return render_template("teacher/califications.html", name = user.name, califications = califications)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
 
 @app.route('/teacher/students',methods=["GET"])
 @login_required
@@ -437,6 +464,26 @@ def make_dir_submissions(course, username):
     path = "courses/" + course + "/submitted/" + username
     path_ = os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
     os.mkdir(path_)
+    course_ = Course.query.filter_by(name = course).first()
+    sections = Section.query.filter_by(course_id = course_.id).all()
+    for section in sections:
+        s_path = path_ + "/" + section.task_name
+        os.mkdir(s_path)
+
+
+def get_teachers_califications(teacher_id):
+    courses = Course.query.filter_by(teacher_id = teacher_id).all()
+    final_califications = []
+    for course in courses:
+        sections = Section.query.filter_by(course_id = course.id).all()
+        for section in sections:
+            califications = Calification.query.filter_by(section_id = section.id).all()
+            for calification in califications:
+                user = User.query.filter_by(id = calification.student_id).first()
+                tmp_list = [course.name, section.name, user.name, user.username, section.task_name, calification.value]
+                final_califications.append(tmp_list)
+    return final_califications
+
 
 
 # @app.route('/teacher',methods=["GET", "POST"])
