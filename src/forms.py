@@ -22,3 +22,8 @@ class CreateStudentForm(FlaskForm):
     username = StringField('Nombre de usuario del alumno', validators=[DataRequired(), Length(max=32)])
     password = PasswordField('Contraseña temporal', validators=[DataRequired()])
     confirm_password = PasswordField('Repita la contraseña', validators=[DataRequired()])
+
+
+class CreateCourseForm(FlaskForm):
+    name = StringField('Nombre del curso', validators=[DataRequired(), Length(max=32)])
+    description = StringField('Descripcion del curso', validators=[DataRequired(), Length(max=700)])

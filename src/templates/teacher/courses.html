@@ -9,6 +9,8 @@
             <tr>
                 <th> Curso </th>
                 <th>  </th>
+                <th>  </th>
+    
     
             </tr>
             </thead>
@@ -16,13 +18,29 @@
         {% for course in courses %}
             <tr>
                 <td>{{ course.name }}</td>
-                <td>BOTON</td>
+                <td>
+                    <form action="{{ url_for('teacher_courses_course', course = course.name) }}" >
+                        <input type="submit" value = "Acceder" />
+                    </form>
+                </td>
+
+                <td>
+                    <form action="{{ url_for('teacher_course_students', course = course.name) }}" >
+                        <input type="submit" value = "Gestion de estudiantes" />
+                    </form>
+                </td>
     
             </tr>
     
         {% endfor %}
         </tbody>
         </table>
+        </div>
+            <form action="{{ url_for('teacher_create_course') }}" >
+                <input type="submit" value = "Crear curso" />
+            </form>
+        <div>
+
         </div>
 
 {% endblock %}  

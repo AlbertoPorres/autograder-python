@@ -1,8 +1,11 @@
+from ast import Pass
+from curses.ascii import US
 import shutil
 from flask import render_template, request, redirect, url_for, flash, send_from_directory
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 from pyparsing import removeQuotes
-from src.forms import LoginForm, ChagePasswordForm, CreateStudentForm
+from requests import session
+from src.forms import LoginForm, ChagePasswordForm, CreateStudentForm, CreateCourseForm
 from src.management import NbgraderManager
 import os
 from src.models import User, Course, Section, Calification, CourseMembers
@@ -19,34 +22,36 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-# db.drop_all()
-# db.create_all()
+db.drop_all()
+db.create_all()
 
-# # manually added db rows
-# Teacher = User(name = "Profesor 1", username = "Teacher1", password = "1234", is_teacher = True)
-# Student1 = User(name = "Alberto", username = "Student1", password = "1234", first_login = True)
-# Student2 = User(name = "Pablo", username = "Student2", password = "1234")
-# db.session.add(Teacher)
-# db.session.add(Student1)
-# db.session.add(Student2)
-# db.session.commit()
+# manually added db rows
+Teacher = User(name = "Profesor 1", username = "Teacher1", password = "1234", is_teacher = True)
+Student1 = User(name = "Alberto", username = "Student1", password = "1234", first_login = True)
+Student2 = User(name = "Pablo", username = "Student2", password = "1234")
+Student3 = User(name = "Pedro", username = "Student3", password = "1234")
+db.session.add(Teacher)
+db.session.add(Student1)
+db.session.add(Student2)
+db.session.add(Student3)
+db.session.commit()
 
-# course = Course(teacher_id = Teacher.id, name = "Curso de Python", description = "Curso básico de python" )
-# db.session.add(course)
-# db.session.commit()
+course = Course(teacher_id = Teacher.id, name = "Curso de Python", description = "Curso básico de python" )
+db.session.add(course)
+db.session.commit()
 
-# section1 = Section(course_id = course.id, name = "Introduccion a Python", content_name = "T_Introduccion.ipynb", task_name = "EV_Introduccion")
-# section2 = Section(course_id = course.id, name = "Funciones en Python", content_name = "T_Funciones.ipynb", task_name = "EV_Funciones")
+section1 = Section(course_id = course.id, name = "Introduccion a Python", content_name = "T_Introduccion.ipynb", task_name = "EV_Introduccion")
+section2 = Section(course_id = course.id, name = "Funciones en Python", content_name = "T_Funciones.ipynb", task_name = "EV_Funciones")
 
-# db.session.add(section1)
-# db.session.add(section2)
-# db.session.commit()
+db.session.add(section1)
+db.session.add(section2)
+db.session.commit()
 
-# student_enroll1 = CourseMembers(course_id = course.id, student_id = Student1.id)
-# student_enroll2 = CourseMembers(course_id = course.id, student_id = Student2.id)
-# db.session.add(student_enroll1)
-# db.session.add(student_enroll2)
-# db.session.commit()
+student_enroll1 = CourseMembers(course_id = course.id, student_id = Student1.id)
+student_enroll2 = CourseMembers(course_id = course.id, student_id = Student2.id)
+db.session.add(student_enroll1)
+db.session.add(student_enroll2)
+db.session.commit()
 
 
 # ROUTES
@@ -129,6 +134,119 @@ def teacher_courses():
         user = get_current_User(current_user.get_id())
         courses = Course.query.filter_by(teacher_id = user.id).all()
         return render_template("teacher/courses.html", name = user.name, courses = courses)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+@app.route('/teacher/courses/<string:course>',methods=["GET"])
+@login_required
+def teacher_courses_course(course):
+    if check_access("teacher"):
+        user = get_current_User(current_user.get_id())
+        course = Course.query.filter_by(name = course).first()
+        return render_template("teacher/course.html", name = user.name)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+@app.route('/teacher/courses/<string:course>/students',methods=["GET"])
+@login_required
+def teacher_course_students(course):
+    if check_access("teacher"):
+        user = get_current_User(current_user.get_id())
+        course = Course.query.filter_by(name = course).first()
+        students = User.query.filter_by(is_teacher = False).all()
+        relationships = CourseMembers.query.filter_by(course_id = course.id).all()
+        students_in = []
+        students_out = []
+        for student in students:
+            flag = False
+            for relationship in relationships:
+                if relationship.student_id == student.id:
+                    flag = True
+            if flag:
+                students_in.append(student)
+            else:
+                students_out.append(student)
+
+        return render_template("teacher/course_students.html",course = course.name, name = user.name, students_in = students_in, students_out = students_out)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+@app.route('/teacher/quick/<string:course>/<string:student>',methods=["GET"])
+@login_required
+def teacher_quick_student(course,student):
+    if check_access("teacher"):
+        user = get_current_User(current_user.get_id())
+        course = Course.query.filter_by(name = course).first()
+        student = User.query.filter_by(username = student).first()
+        relation = CourseMembers.query.filter_by(course_id = course.id, student_id = student.id).first()
+        if not relation:
+            flash('Este alumno ya habia sido eliminado del curso')
+            return redirect(url_for("teacher_course_students",course = course.name)) 
+        quick_from_course(course,student)
+        flash("Alumno borrado del curso")
+        return redirect(url_for("teacher_course_students",course = course.name))
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+
+@app.route('/teacher/enrroll/<string:course>/<string:student>',methods=["GET"])
+@login_required
+def teacher_enrroll_student(course,student):
+    if check_access("teacher"):
+        user = get_current_User(current_user.get_id())
+        course = Course.query.filter_by(name = course).first()
+        student = User.query.filter_by(username = student).first()
+        relation = CourseMembers(course_id = course.id, student_id = student.id)
+        try:
+            db.session.add(relation)
+            db.session.commit()
+            manager = NbgraderManager(course.name)
+            manager.add_student(student.username)
+            manager.closeDB()
+        except:
+            db.session.rollback()
+            flash("Alumno existente en el curso")
+            return redirect(url_for("teacher_course_students",course = course.name))
+        make_dir_submissions(course.name, student.username)
+        flash("Alumno añadido al curso")
+        return redirect(url_for("teacher_course_students",course = course.name))
+
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+
+@app.route('/teacher/create_course',methods=["GET", "POST"])
+@login_required
+def teacher_create_course():
+    if check_access("teacher"):
+        user = get_current_User(current_user.get_id())
+        form = CreateCourseForm()
+        if form.validate_on_submit():
+            name = form.name.data
+            description = form.description.data
+            try:
+                course = Course(teacher_id = user.id, name = name, description = description)
+                db.session.add(course)
+                db.session.commit()
+            except Exception:
+                flash("Ya existe un curso con ese nombre")
+                return redirect(url_for("teacher_courses"))
+            else:
+                path = "courses/" + name 
+                path_ = "courses/base_course"
+                source = os.path.join(os.path.abspath(os.path.dirname(__file__)), path_)
+                destination = os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
+                shutil.copytree(source,destination)
+                flash("Curso creado correctamente")
+                return redirect(url_for("teacher_courses"))
+
+
+        return render_template("teacher/create_course.html", name = user.name, form = form)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
@@ -406,6 +524,13 @@ def get_student_courses(student_id):
 def get_teacher_courses(teacher_id):
     return Course.query.filter_by(teacher_id = teacher_id).all()
 
+def get_course_sections(course):
+    sections = []
+    sections_ = Section.query.filter_by(course_id = course.id).all()
+    for section in sections_:
+        sections.append(section)
+    return sections
+
 def get_student_califications(user, courses):
     califications = []
     for course in courses:
@@ -484,6 +609,25 @@ def get_teachers_califications(teacher_id):
                 final_califications.append(tmp_list)
     return final_califications
 
+
+def quick_from_course(course,student):
+
+        path = "courses/" + course.name + "/submitted/" + student.username
+        path_ = os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
+        shutil.rmtree(path_)
+        manager = NbgraderManager(course.name)
+        manager.remove_student(student.username)
+        manager.closeDB()
+
+        relation = CourseMembers.query.filter_by(course_id = course.id, student_id = student.id).first()
+        
+        db.session.delete(relation)
+        sections = get_course_sections(course)
+        for section in sections:
+            calification = Calification.query.filter_by(student_id = student.id, section_id = section.id).first()
+            if calification:
+                db.session.delete(calification)
+        db.session.commit()
 
 
 # @app.route('/teacher',methods=["GET", "POST"])
