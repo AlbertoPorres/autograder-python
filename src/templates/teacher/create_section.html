@@ -1,0 +1,52 @@
+{% extends "base_template.html" %}
+{% block title %}Create Course{% endblock %}
+{% block content %}
+Creacion de seccion
+<form id = "mainForm" method = "POST" enctype="multipart/form-data" >
+    <label for="name"> Nombre: </label>
+    <input type="text" id ="name" name = "name"><br>
+    <label for="content"> Archivo de contenido teórico: </label>
+    <input type = file name = content_file><br>
+    <label for="task_name"> Nombre de la tarea: </label>
+    <input type="text" id ="task_name" name = "task_name"><br>
+    <label for="task"> Archivo de contenido teórico: </label>
+    <input type = file name = task_file><br>
+    <input type= submit id = "directly" name = "directly" value = "Crear sección de forma directa">
+    <input type= submit id = "activate-kernel" name = "activate-kernel"  value = "Crear tarea manualmente" >
+</form>
+
+
+<form id = "confirmForm" method = "POST">
+    <input id = "confirm" name = "confirm" type= submit value = "Confirmar">
+</form>
+
+
+<script>
+    var confirm = document.getElementById("confirm");
+    var activate = document.getElementById("activate-kernel");
+    var directly = document.getElementById("directly");
+    if ("{{ activated }}" == "True"){
+        confirm.disabled = false;
+        activate.disabled = true;
+        directly.disabled = true;
+    } else {
+        confirm.disabled = true;
+        activate.disabled = false;
+        directly.disabled = false;
+    }
+    
+    var flag = true;
+    directly.addEventListener('click', function(event) {
+        flag = false;
+    });
+
+    document.querySelector('#mainForm').addEventListener('submit',function(){
+        var task = this.elements.task_name.value;
+        if (flag){
+            window.open('/teacher/kernel-loader/' + task,'_blank');
+        }
+    });
+</script>
+{% endblock %}  
+
+

@@ -46,9 +46,9 @@ class Course(db.Model):
 class Section(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'))
-    name = db.Column(db.String(80), nullable=False)
-    content_name = db.Column(db.String(80), nullable=False)
-    task_name = db.Column(db.String(80), nullable=False)
+    name = db.Column(db.String(80), nullable=False,  unique = True)
+    content_name = db.Column(db.String(80), nullable=False,  unique = True)
+    task_name = db.Column(db.String(80), nullable=False,  unique = True)
 
     section_calif = db.relationship('Calification', backref = 'section')
 
@@ -63,4 +63,12 @@ class CourseMembers(db.Model):
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'), primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
 
+
+class UnreleasedSection(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    teacher_id = db.Column(db.Integer, nullable = False)
+    course_id = db.Column(db.Integer, nullable = False)
+    name = db.Column(db.String(80), nullable=False,  unique = True)
+    content_name = db.Column(db.String(80), nullable=False,  unique = True)
+    task_name = db.Column(db.String(80), nullable=False,  unique = True)
 

@@ -27,3 +27,4 @@ class CreateStudentForm(FlaskForm):
 class CreateCourseForm(FlaskForm):
     name = StringField('Nombre del curso', validators=[DataRequired(), Length(max=32)])
     description = StringField('Descripcion del curso', validators=[DataRequired(), Length(max=700)])
+

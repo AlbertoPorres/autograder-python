@@ -1,16 +1,21 @@
 from ast import Pass
 from curses.ascii import US
+from pickle import NONE
+from re import U
 import shutil
+import time
 from flask import render_template, request, redirect, url_for, flash, send_from_directory
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 from pyparsing import removeQuotes
 from requests import session
+import werkzeug
 from src.forms import LoginForm, ChagePasswordForm, CreateStudentForm, CreateCourseForm
 from src.management import NbgraderManager
 import os
-from src.models import User, Course, Section, Calification, CourseMembers
+from src.models import User, Course, Section, Calification, CourseMembers, UnreleasedSection
 from src import app, db
 from werkzeug.utils import secure_filename
+from pathlib import Path 
 
 #Login manager
 login_manager = LoginManager()
@@ -71,7 +76,7 @@ def login():
                 if user.is_teacher:
                     return redirect(url_for('teacher'))
                 if user.first_login:
-                    return redirect(url_for('student_change_password'))
+                    return redirect(url_for('change_password'))
                 return redirect(url_for('student'))
         flash('usuario no registrado')
         return redirect(url_for('login'))
@@ -98,10 +103,10 @@ def teacher():
         return redirect(url_for('student'))
 
 
-@app.route('/teacher/change_password',methods=["GET", "POST"])
+@app.route('/change_password',methods=["GET", "POST"])
 @login_required
-def teacher_change_password():
-    if check_access("teacher"):
+def change_password():
+    
         form = ChagePasswordForm()
         user = get_current_User(current_user.get_id())
         if form.validate_on_submit():
@@ -116,15 +121,13 @@ def teacher_change_password():
                         db.session.commit()
                         return redirect(url_for('logout'))
                     flash("La nueva contraseña no puede ser la misma que la actual")
-                    return redirect(url_for('teacher_change_password'))
+                    return redirect(url_for('change_password'))
                 flash("Las contraseñas han de coincidir")
-                return redirect(url_for('teacher_change_password'))
+                return redirect(url_for('change_password'))
             flash("Contraseña incorrecta")
-            redirect(url_for('teacher_change_password'))
-        return render_template("teacher/change_password.html", form = form)
-    else:
-        flash("Acceso no permitido")
-        return redirect(url_for('student'))
+            redirect(url_for('change_password'))
+        return render_template("change_password.html", form = form)
+
 
 
 @app.route('/teacher/courses',methods=["GET"])
@@ -144,7 +147,8 @@ def teacher_courses_course(course):
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         course = Course.query.filter_by(name = course).first()
-        return render_template("teacher/course.html", name = user.name)
+        sections = get_course_sections(course)
+        return render_template("teacher/course.html", name = user.name, sections = sections, course = course)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
@@ -245,12 +249,140 @@ def teacher_create_course():
                 flash("Curso creado correctamente")
                 return redirect(url_for("teacher_courses"))
 
-
         return render_template("teacher/create_course.html", name = user.name, form = form)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
 
+
+@app.route('/teacher/kernel-loader/<string:task>',methods=["GET"])
+@login_required
+def teacher_kernel_loader(task):
+    if check_access("teacher"):
+        time.sleep(5)
+        user = get_current_User(current_user.get_id())
+        section = UnreleasedSection.query.filter_by(task_name = task).first()
+        if section:
+            course = Course.query.filter_by(id = section.course_id).first()
+            return render_template("teacher/kernel_loader.html", name = user.name, task = task, course = course.name)
+        else:
+            os.system("pkill -f -1 jupyter*")
+            return render_template("teacher/error_template.html")
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+@app.route('/teacher/kernel-loader/',methods=["GET"])
+@login_required
+def teacher_kernel_error():
+    if check_access("teacher"):
+        flash("Algo salio mal")
+        os.system("pkill -f -1 jupyter*")
+        return render_template("teacher/error_template.html")
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+@app.route('/teacher/<string:course>/create_section',methods=["GET", "POST"])
+@login_required
+def teacher_create_section(course):
+    if check_access("teacher"):
+        user = get_current_User(current_user.get_id())
+        course = Course.query.filter_by(name = course).first()
+        if request.method == 'POST':
+            
+            try:
+                # confirmacion de la tarea creada indirectamente
+                request.form["confirm"]
+                unreleased = UnreleasedSection.query.filter_by(teacher_id = user.id, course_id = course.id).all()
+                for unrelease in unreleased:
+                    section = Section(course_id = course.id, name = unrelease.name, content_name = unrelease.content_name, task_name = unrelease.task_name)
+                    manager = NbgraderManager(course.name)
+                    manager.create_assigment(section.task_name)
+                    manager.closeDB()
+                    db.session.add(section)
+                    db.session.delete(unrelease)
+                    db.session.commit()
+                
+                os.system("pkill -f -1 jupyter*")
+                flash("Confirmado")
+                return render_template("teacher/create_section.html", name = user.name, activated = False)
+            except werkzeug.exceptions.BadRequestKeyError:
+                try:
+                    # si se ha creado la seccion de forma directa:
+                    content_file = request.files['content_file']
+                    task_file = request.files['task_file']
+                    section_name = request.form.get('name')
+                    task_name = request.form.get('task_name')
+                    request.form["directly"]
+                    if content_file and task_file and section_name and task_name:
+                        section = Section(course_id = course.id, name = section_name, content_name = content_file.filename, task_name = task_name)
+                        unreleased = UnreleasedSection(teacher_id = user.id, course_id = course.id, name = section_name, content_name = content_file.filename, task_name = task_name)
+                        try:
+                            db.session.add(section)
+                            db.session.add(unreleased)
+                            db.session.commit()
+                        except Exception:
+                            db.session.rollback()
+                            flash("No permitido: Algún dato ya pertenece a otra sección")
+                            return render_template("teacher/create_section.html", name = user.name, activated = False)
+
+                        db.session.delete(unreleased)
+                        db.session.commit()
+                        content_path = "courses/" + course.name + "/content"
+                        source_path = "courses/" + course.name + "/source/" + task_name
+                        os.mkdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), source_path))
+                        content_file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),content_path ,content_file.filename))
+                        task_file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),source_path ,task_name + ".ipynb"))
+                        manager = NbgraderManager(course.name)
+                        manager.create_assigment(task_name)
+                        manager.closeDB()
+                        flash("Sección creada con exito")
+                        return redirect(url_for('teacher_courses_course', course = course.name))
+                    else:
+                        flash("Rellene todos los campos necesarios para realizar esta acción")
+                        return render_template("teacher/create_section.html", name = user.name, activated = False)
+                except werkzeug.exceptions.BadRequestKeyError:
+                    # si se crea de forma manual activando el kernel
+                    if content_file and section_name and task_name:
+                        section = Section(course_id = course.id, name = section_name, content_name = content_file.filename, task_name = task_name)
+                        unreleased = UnreleasedSection(teacher_id = user.id, course_id = course.id, name = section_name, content_name = content_file.filename, task_name = task_name)
+                        try:
+                            db.session.add(section)
+                            db.session.add(unreleased)
+                            db.session.commit()
+                        except Exception:
+                            db.session.rollback()
+                            flash("No permitido: Algún dato ya pertenece a otra sección")
+                            return render_template("teacher/create_section.html", name = user.name, activated = False)
+                        db.session.delete(section)
+                        db.session.commit()
+                        content_path = "courses/" + course.name + "/content"
+                        source_path = "courses/" + course.name + "/source/" + task_name
+                        os.mkdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), source_path))
+                        content_file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),content_path ,content_file.filename))
+
+                        source_path = source_path + "/"
+                        destiny = os.path.join(os.path.abspath(os.path.dirname(__file__)), source_path)
+                        base_notebook_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/base_notebook.ipynb" )
+                        shutil.copy(base_notebook_path, destiny)
+
+                        new_name = os.path.join(os.path.abspath(os.path.dirname(__file__)), source_path + task_name + ".ipynb")
+                        current_name = os.path.join(os.path.abspath(os.path.dirname(__file__)), source_path +  "base_notebook.ipynb")
+                        os.rename(current_name, new_name)
+
+                        os.system("pkill -f -1 jupyter*")
+                        os.system("jupyter notebook --ip='0.0.0.0' --no-browser --allow-root --port=8888 &")
+                    else:
+                        flash("Rellene todos los campos necesarios para realizar esta acción")
+                        return render_template("teacher/create_section.html", name = user.name, activated = False)
+                    return render_template("teacher/create_section.html", name = user.name, activated = True)
+            
+        else:
+            return render_template("teacher/create_section.html", name = user.name, activated = False)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
 
 
 @app.route('/teacher/califications',methods=["GET"])
@@ -409,7 +541,7 @@ def student_course(course):
                     else:
                         flash("Su tarea ha sido enviada")
                         path = "courses/" + course + "/submitted/" + user.username + "/" + task 
-                        file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),path ,secure_filename(file.filename)))
+                        file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),path ,file.filename))
                         manager = NbgraderManager(course)
                         score = manager.grade(task,user.username)
                         calification = Calification(student_id = user.id, section_id = section, task_name = task, value = score)
@@ -429,23 +561,17 @@ def student_course(course):
 @app.route('/download_content/<string:course>/<string:filename>')
 @login_required
 def download_content(course,filename):
-    if check_access("student"):
-        path = "courses/" + course + "/content"
-        return send_from_directory(path, filename, as_attachment=True)
-    else:
-        flash("Acceso no permitido")
-        return redirect(url_for('teacher'))
+    path = "courses/" + course + "/content"
+    return send_from_directory(path, filename, as_attachment=True)
+
 
 @app.route('/download_task/<string:course>/<string:filename>')
 @login_required
 def download_task(course,filename):
-    if check_access("student"):
-        path = "courses/" + course + "/release/" + filename
-        notebook = filename + ".ipynb"
-        return send_from_directory(path, notebook, as_attachment=True)
-    else:
-        flash("Acceso no permitido")
-        return redirect(url_for('teacher'))
+    path = "courses/" + course + "/release/" + filename
+    notebook = filename + ".ipynb"
+    return send_from_directory(path, notebook, as_attachment=True)
+
 
 @app.route('/student/courses/<string:course>/<string:username>',methods=["GET"])
 @login_required
@@ -478,34 +604,6 @@ def student_califications():
         return redirect(url_for('teacher'))
 
 
-
-@app.route('/student/change_password',methods=["GET", "POST"])
-@login_required
-def student_change_password():
-    if check_access("student"):
-        form = ChagePasswordForm()
-        user = get_current_User(current_user.get_id())
-        if form.validate_on_submit():
-            password = form.current_password.data
-            new_password_1 = form.new_password_1.data
-            new_password_2 = form.new_password_2.data
-            if user.verify_password(password):
-                if new_password_1 == new_password_2:
-                    if new_password_1 != password:
-                        user.change_password(new_password_1)
-                        user.first_login = False
-                        db.session.commit()
-                        return redirect(url_for('logout'))
-                    flash("La nueva contraseña no puede ser la misma a la actual")
-                    return redirect(url_for('student_change_password'))
-                flash("Datos erroneos")
-                return redirect(url_for('student_change_password'))
-            flash("Contraseña incorrecta")
-            redirect(url_for('student_change_password'))
-        return render_template("student/change_password.html", form = form)
-    else:
-        flash("Acceso no permitido")
-        return redirect(url_for('teacher'))
 
 
 # METODOS ADICIONALES DE FUNCIONAMIENTO
@@ -628,6 +726,9 @@ def quick_from_course(course,student):
             if calification:
                 db.session.delete(calification)
         db.session.commit()
+
+
+            
 
 
 # @app.route('/teacher',methods=["GET", "POST"])

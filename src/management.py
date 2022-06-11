@@ -49,9 +49,7 @@ class NbgraderManager:
     def create_assigment(self, task):
         self.api.generate_assignment(task)
 
-    def release_assigment(self, task):
-        self.api.release_assignment(task)
-
-
     def closeDB(self):
         self.dbConnection.close()
+
+

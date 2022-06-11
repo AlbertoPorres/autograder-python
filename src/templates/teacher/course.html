@@ -3,5 +3,16 @@
 {% block content %}
     Bienvenido {{ name }} <br>
 
+    {% for section in sections %}
+        <h2>{{ section.name }}</h2>
+        <a href="{{ url_for('download_content', course=course.name, filename=section.content_name) }}"> Descargar contenido teorico de {{ section.name }}</a>
+        <a href="{{ url_for('download_task', course=course.name, filename=section.task_name) }}"> Descargar tarea de {{ section.name }}</a>
+    {% endfor %}
 
+
+    </div>
+    <form action="{{ url_for('teacher_create_section', course = course.name) }}" >
+        <input type="submit" value = "Crear sección de contenido" />
+    </form>
+    <div>
 {% endblock %}  
