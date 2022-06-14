@@ -1,32 +1,75 @@
-body {
-    margin: 0;
-    padding: 0;
-    font-size: 100%;
-    line-height: 1.5
+
+.landing-navbar {
+    box-shadow: 2px 2px 5px rgb(0, 0, 0);
+    background-color:rgb(221, 247, 255);
 }
-h1, h2, h3, h4 {
-    margin: 1em 0 .5em;
-    line-height: 1.25
+
+
+.landing-navbar .landing-navbar-container .landing-ul .repository {
+    color: rgb(0, 0, 0);
+    font-size: 1.4em;
+    font-weight: 600;
+    text-shadow:3px 3px rgb(255, 255, 255);
 }
-h1 {
-    font-size: 2em
+
+
+
+.index-background {
+    height: 90vh;
+    width: 100%;
+    background:url('images/index-background.jpg');
+    background-position: top;
+    background-size: cover;
+    background-repeat: no-repeat;
+    color: #fff;
 }
-h2 {
-    font-size: 1.5em
+
+
+.landing-mainText {
+    margin-top: 10%;
+    transform: translateY();
+    margin-left: 32%;
 }
-h3 {
-    font-size: 1.2em
+
+.landing-mainText h1{
+    font-size: 2.5em;
+    font-weight: 600;
+    font-style: oblique;
+    text-shadow:2px 2px rgba(231, 199, 199, 0.644);
+} 
+
+.landing-mainText p{
+    font-size: 1em;
+    font-weight: 600;
+    font-style: oblique;
+    margin-left: 9%;
+    text-shadow:1px 1px rgba(231, 199, 199, 0.644);
+} 
+
+.landing-mainText a{
+    margin-top: 1%;
+    font-size: 1.7em;
+    margin-left: 27%;
+    font-weight: 600;
+    color:rgba(0, 0, 0, 0.74);
+    font-style:normal;
+    background-color: rgb(202, 201, 201);
+    text-shadow:2px 2px rgba(147, 167, 255, 0.644);
+} 
+
+.loginBody {
+    background:url('images/index-background.jpg') fixed;
+    font-style:italic;
 }
-ul, ol {
-    margin: 1em 0;
-    padding-left: 40px
+
+.loginImage{
+    margin-top: 5%;
+    margin-bottom: 7%;
 }
-p, figure {
-    margin: 1em 0
+
+.mainLogin {
+    margin-top: 20%;
+    margin-left: 10%;
+    width: 1200px;
 }
-a img {
-    border: none
-}
-sup, sub {
-    line-height: 0
-}
+

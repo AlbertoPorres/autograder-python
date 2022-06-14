@@ -1,7 +1,3 @@
-from ast import Pass
-from curses.ascii import US
-from pickle import NONE
-from re import U
 import shutil
 import time
 from flask import render_template, request, redirect, url_for, flash, send_from_directory
@@ -25,38 +21,6 @@ login_manager.login_view = "login"
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-
-db.drop_all()
-db.create_all()
-
-# manually added db rows
-Teacher = User(name = "Profesor 1", username = "Teacher1", password = "1234", is_teacher = True)
-Student1 = User(name = "Alberto", username = "Student1", password = "1234", first_login = True)
-Student2 = User(name = "Pablo", username = "Student2", password = "1234")
-Student3 = User(name = "Pedro", username = "Student3", password = "1234")
-db.session.add(Teacher)
-db.session.add(Student1)
-db.session.add(Student2)
-db.session.add(Student3)
-db.session.commit()
-
-course = Course(teacher_id = Teacher.id, name = "Curso de Python", description = "Curso básico de python" )
-db.session.add(course)
-db.session.commit()
-
-section1 = Section(course_id = course.id, name = "Introduccion a Python", content_name = "T_Introduccion.ipynb", task_name = "EV_Introduccion")
-section2 = Section(course_id = course.id, name = "Funciones en Python", content_name = "T_Funciones.ipynb", task_name = "EV_Funciones")
-
-db.session.add(section1)
-db.session.add(section2)
-db.session.commit()
-
-student_enroll1 = CourseMembers(course_id = course.id, student_id = Student1.id)
-student_enroll2 = CourseMembers(course_id = course.id, student_id = Student2.id)
-db.session.add(student_enroll1)
-db.session.add(student_enroll2)
-db.session.commit()
 
 
 # ROUTES
@@ -316,6 +280,9 @@ def teacher_create_section(course):
                     task_name = request.form.get('task_name')
                     request.form["directly"]
                     if content_file and task_file and section_name and task_name:
+                        if not ('.' in task_file.filename and (task_file.filename.rsplit('.',1)[1].lower() in {'.ipynb'})):
+                            flash("La extension de la tarea debe de ser .ipynb")
+                            return render_template("teacher/create_section.html", name = user.name, activated = False)
                         section = Section(course_id = course.id, name = section_name, content_name = content_file.filename, task_name = task_name)
                         unreleased = UnreleasedSection(teacher_id = user.id, course_id = course.id, name = section_name, content_name = content_file.filename, task_name = task_name)
                         try:

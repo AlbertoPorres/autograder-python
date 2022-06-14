@@ -1,4 +1,5 @@
 from distutils.command.config import config
+from multiprocessing import Manager
 from nbgrader.apps import NbGraderAPI
 from nbgrader.api import Gradebook
 from traitlets.config import Config
@@ -34,7 +35,7 @@ class NbgraderManager:
         submision = self.dbConnection.find_submission(task,student)
         # nota sobre 10
         grade = submision.score * 10 / submision.max_score
-        return grade
+        return round(grade,2)
 
 
     def is_submitted(self, task, student):
@@ -51,5 +52,4 @@ class NbgraderManager:
 
     def closeDB(self):
         self.dbConnection.close()
-
 
