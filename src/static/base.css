@@ -1,9 +1,7 @@
-
 .landing-navbar {
     box-shadow: 2px 2px 5px rgb(0, 0, 0);
-    background-color:rgb(221, 247, 255);
+    background-color:rgb(183, 195, 199);
 }
-
 
 .landing-navbar .landing-navbar-container .landing-ul .repository {
     color: rgb(0, 0, 0);
@@ -11,8 +9,6 @@
     font-weight: 600;
     text-shadow:3px 3px rgb(255, 255, 255);
 }
-
-
 
 .index-background {
     height: 90vh;
@@ -23,7 +19,6 @@
     background-repeat: no-repeat;
     color: #fff;
 }
-
 
 .landing-mainText {
     margin-top: 10%;
@@ -55,6 +50,7 @@
     font-style:normal;
     background-color: rgb(202, 201, 201);
     text-shadow:2px 2px rgba(147, 167, 255, 0.644);
+    box-shadow: 2px 2px rgba(0, 47, 255, 0.644);;
 } 
 
 .loginBody {
@@ -73,3 +69,6 @@
     width: 1200px;
 }
 
+.containerBody {
+    background-color: aquamarine;
+}

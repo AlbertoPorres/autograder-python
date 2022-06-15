@@ -22,7 +22,6 @@ login_manager.login_view = "login"
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-
 # ROUTES
 @app.route('/',methods=["GET"])
 def index():
@@ -45,7 +44,7 @@ def login():
         flash('usuario no registrado')
         return redirect(url_for('login'))
 
-    return render_template("login.html", form = form)
+    return render_template("login.html", form = form, user = None)
 
 @app.route('/logout',methods=["GET", "POST"])
 @login_required
@@ -61,7 +60,7 @@ def logout():
 def teacher():
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
-        return render_template("teacher.html", name = user.name)
+        return render_template("teacher.html", user = user)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
@@ -90,7 +89,7 @@ def change_password():
                 return redirect(url_for('change_password'))
             flash("Contraseña incorrecta")
             redirect(url_for('change_password'))
-        return render_template("change_password.html", form = form)
+        return render_template("change_password.html", user = user, form = form)
 
 
 
@@ -100,7 +99,7 @@ def teacher_courses():
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         courses = Course.query.filter_by(teacher_id = user.id).all()
-        return render_template("teacher/courses.html", name = user.name, courses = courses)
+        return render_template("teacher/courses.html",user = user, courses = courses)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
@@ -112,7 +111,7 @@ def teacher_courses_course(course):
         user = get_current_User(current_user.get_id())
         course = Course.query.filter_by(name = course).first()
         sections = get_course_sections(course)
-        return render_template("teacher/course.html", name = user.name, sections = sections, course = course)
+        return render_template("teacher/course.html",  user = user, sections = sections, course = course)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
@@ -137,7 +136,7 @@ def teacher_course_students(course):
             else:
                 students_out.append(student)
 
-        return render_template("teacher/course_students.html",course = course.name, name = user.name, students_in = students_in, students_out = students_out)
+        return render_template("teacher/course_students.html",course = course.name,  user = user, students_in = students_in, students_out = students_out)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
@@ -213,7 +212,7 @@ def teacher_create_course():
                 flash("Curso creado correctamente")
                 return redirect(url_for("teacher_courses"))
 
-        return render_template("teacher/create_course.html", name = user.name, form = form)
+        return render_template("teacher/create_course.html", user = user, form = form)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
@@ -228,7 +227,7 @@ def teacher_kernel_loader(task):
         section = UnreleasedSection.query.filter_by(task_name = task).first()
         if section:
             course = Course.query.filter_by(id = section.course_id).first()
-            return render_template("teacher/kernel_loader.html", name = user.name, task = task, course = course.name)
+            return render_template("teacher/kernel_loader.html",  user = user, task = task, course = course.name)
         else:
             os.system("pkill -f -1 jupyter*")
             return render_template("teacher/error_template.html")
@@ -242,7 +241,7 @@ def teacher_kernel_error():
     if check_access("teacher"):
         flash("Algo salio mal")
         os.system("pkill -f -1 jupyter*")
-        return render_template("teacher/error_template.html")
+        return render_template("teacher/error_template.html",  user = user)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
@@ -292,7 +291,7 @@ def teacher_create_section(course):
                         except Exception:
                             db.session.rollback()
                             flash("No permitido: Algún dato ya pertenece a otra sección")
-                            return render_template("teacher/create_section.html", name = user.name, activated = False)
+                            return render_template("teacher/create_section.html",  user = user, activated = False)
 
                         db.session.delete(unreleased)
                         db.session.commit()
@@ -308,7 +307,7 @@ def teacher_create_section(course):
                         return redirect(url_for('teacher_courses_course', course = course.name))
                     else:
                         flash("Rellene todos los campos necesarios para realizar esta acción")
-                        return render_template("teacher/create_section.html", name = user.name, activated = False)
+                        return render_template("teacher/create_section.html",  user = user, activated = False)
                 except werkzeug.exceptions.BadRequestKeyError:
                     # si se crea de forma manual activando el kernel
                     if content_file and section_name and task_name:
@@ -321,7 +320,7 @@ def teacher_create_section(course):
                         except Exception:
                             db.session.rollback()
                             flash("No permitido: Algún dato ya pertenece a otra sección")
-                            return render_template("teacher/create_section.html", name = user.name, activated = False)
+                            return render_template("teacher/create_section.html",  user = user, activated = False)
                         db.session.delete(section)
                         db.session.commit()
                         content_path = "courses/" + course.name + "/content"
@@ -342,11 +341,11 @@ def teacher_create_section(course):
                         os.system("jupyter notebook --ip='0.0.0.0' --no-browser --allow-root --port=8888 &")
                     else:
                         flash("Rellene todos los campos necesarios para realizar esta acción")
-                        return render_template("teacher/create_section.html", name = user.name, activated = False)
-                    return render_template("teacher/create_section.html", name = user.name, activated = True)
+                        return render_template("teacher/create_section.html",  user = user, activated = False)
+                    return render_template("teacher/create_section.html",  user = user, activated = True)
             
         else:
-            return render_template("teacher/create_section.html", name = user.name, activated = False)
+            return render_template("teacher/create_section.html",  user = user, activated = False)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
@@ -358,7 +357,7 @@ def teacher_califications():
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         califications = get_teachers_califications(user.id)
-        return render_template("teacher/califications.html", name = user.name, califications = califications)
+        return render_template("teacher/califications.html",  user = user, califications = califications)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
@@ -369,7 +368,7 @@ def teacher_students():
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         enrrolled = get_teacher_students(user.id)
-        return render_template("teacher/students.html", name = user.name, enrrolled = enrrolled)
+        return render_template("teacher/students.html",  user = user, enrrolled = enrrolled)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
@@ -438,7 +437,7 @@ def teacher_create_student():
             else:
                 flash("Debe seleccionar un curso")
         courses = get_teacher_courses(user.id)
-        return render_template("teacher/create_student.html", name = user.name, form = form, courses = courses)
+        return render_template("teacher/create_student.html",  user = user, form = form, courses = courses)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
@@ -455,7 +454,7 @@ def teacher_students_student(student):
             return redirect(url_for('delete_student', student_id = student.id))
         courses = get_student_courses(student.id)
         califications = get_student_califications(student, courses)
-        return render_template("teacher/student.html", name = user.name, student = student.username, califications = califications)
+        return render_template("teacher/student.html", user = user, student = student.username, califications = califications)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
@@ -467,7 +466,7 @@ def teacher_students_student(student):
 def student():
     if check_access("student"):
         user = get_current_User(current_user.get_id())
-        return render_template("student.html", name = user.name)
+        return render_template("student.html",  user = user)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('teacher'))
@@ -478,7 +477,7 @@ def student():
 def student_courses():
     if check_access("student"):
         user = get_current_User(current_user.get_id())
-        return render_template("student/courses.html", name = user.name, courses = get_student_courses(user.id))
+        return render_template("student/courses.html",  user = user, courses = get_student_courses(user.id))
     else:
         flash("Acceso no permitido")
         return redirect(url_for('teacher'))
@@ -518,7 +517,7 @@ def student_course(course):
                     
         current_course = Course.query.filter_by(name = course).first()
         sections = get_sections_data(current_course.id, user.id)
-        return render_template("student/course.html", course = course, name = user.name, sections = sections)
+        return render_template("student/course.html", course = course,  user = user, sections = sections)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('teacher'))
@@ -553,7 +552,7 @@ def student_course_califications(course, username):
             if calification:
                 tmp_list = [section.name,calification]
                 califications.append(tmp_list)
-        return render_template("student/course_califications.html", course = course, name = user.name, califications = califications)
+        return render_template("student/course_califications.html", course = course,  user = user, califications = califications)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('teacher'))
@@ -565,7 +564,7 @@ def student_califications():
         user = get_current_User(current_user.get_id())
         courses = get_student_courses(user.id)
         califications = get_student_califications(user, courses)
-        return render_template("student/califications.html", name = user.name, califications = califications)
+        return render_template("student/califications.html", user = user, califications = califications)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('teacher'))
