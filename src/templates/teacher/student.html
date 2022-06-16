@@ -1,17 +1,17 @@
 {% extends "base_template.html" %}
 {% block title %}Teacher Students student{% endblock %}
-
 {% block content %}
-    <h2>{{ name }}</h2>  <br>
-    <h2>Alumno: {{ student }}</h2>  <br>
-    
-    
-    <table>
+
+    {% if califications %}
+    <h1 class = "jumbotron-heading" style="font-size: 2em;
+    font-weight: 600;">Calificaciones de {{ student.name }}:</h1><br>
+    <table class="table table-striped table-dark">
         <tr>
             <th>Curso</th>
             <th>Seccion</th>
             <th>Tarea</th>
             <th>Calificacion</th>
+            <th></th>
         </tr>
     {% for calification in califications %}
         <tr>
@@ -19,10 +19,17 @@
             <td>{{ calification[1] }}</td>
             <td>{{ calification[2].task_name }}</td>
             <td>{{ calification[2].value }}</td>
+            <td>
+                <a class="btn btn-outline-light" href="{{ url_for('download_submission', course=calification[0] , student=student.username, task_name=calification[2].task_name ) }}"
+                 style="font-weight: 600;"> Descargar entrega</a> 
+            </td>
         </tr>
-
     {% endfor %}
     </table>
+    {% else %}
+    <h1 class = "jumbotron-heading" style="font-size: 2em;
+    font-weight: 600;">{{ student.name }} todavía no ha realizado ninguna entrega!</h1><br>
+    {% endif %}
 
     <form action= "" method="POST", enctype="multipart/form-data" id = "deleteForm">
         <button type="button" class="btn btn-dark" data-toggle="modal" data-target="#deleteModal">ELIMINAR ALUMNO</button>

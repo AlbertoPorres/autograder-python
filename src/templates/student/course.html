@@ -1,27 +1,48 @@
 {% extends "base_template.html" %}
 {% block title %}Course Page{% endblock %}
 {% block content %}
-    Bienvenido {{ name }} <br>
+     <h1 class = "jumbotron-heading" style="font-size: 2em;
+    font-weight: 600;">{{ course.name }}</h1><br>
 
     {% for section in sections %}
-        <h2>{{ section[0].name }}</h2>
-        <a href="{{ url_for('download_content', course=course, filename=section[0].content_name) }}"> Descargar contenido teorico de {{ section[0].name }}</a>
-        <a href="{{ url_for('download_task', course=course, filename=section[0].task_name) }}"> Descargar tarea de {{ section[0].name }}</a>
-
-        {% if section[1] == "True" %}
-            <div>Ya ha entregado esta tarea</div>
-        {% else %}
-            <form method = "POST" enctype="multipart/form-data">
-                <input type = file name = file>
-                <input type = hidden name = task value = "{{ section[0].task_name }}">
-                <input type = hidden name = section value = "{{ section[0].id }}">
-                <input type= submit value = "Entregar Tarea" >
-
-            </form>
-            <br>
-        {% endif %}
-
-
-
+    <div class="container mb-3 mt-3">
+        <table  class="table table-striped table-bordered" style="width:100%; border: 2px solid;">
+            <thead>
+                <th colspan="2"><h2>{{ section[0].name }}</h2></td>
+            </thead>
+            <tbody>
+            <tr>
+                <td>
+                    <a class="btn btn-outline-primary" href="{{ url_for('download_content', course=course.name, filename=section[0].content_name) }}"
+                    style="font-weight: 600;">Descargar contenido teorico de {{ section[0].name }}</a>
+                </td>
+                <td>
+                    <a class="btn btn-outline-primary" href="{{ url_for('download_task', course=course.name, filename=section[0].task_name) }}"
+                    style="font-weight: 600;">Descargar tarea de {{ section[0].name }}</a>
+                </td>
+            </tr>
+            <tr>
+                {% if section[1] == "True" %}
+                <td>Ya ha entregado esta tarea</td>
+                <td>
+                    <a class="btn btn-info" href="{{ url_for('download_submission', course=course.name , student=user.username, task_name= section[0].task_name) }}"
+                     style="font-weight: 600;"> Descargar entrega</a> 
+                </td>
+                {% else %}
+                <td colspan="2">
+                    <form method = "POST" enctype="multipart/form-data">
+                        <input type = file name = file>
+                        <input type = hidden name = task value = "{{ section[0].task_name }}">
+                        <input type = hidden name = section value = "{{ section[0].id }}">
+                        <input type= submit value = "Entregar Tarea" >
+                    </form>
+                </td>
+                {% endif %}
+            </tr>
+            
+            </tbody>
+        </table>
+    </div>
+    <br><br>
     {% endfor %}
 {% endblock %}  

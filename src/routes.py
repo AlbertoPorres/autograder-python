@@ -454,7 +454,7 @@ def teacher_students_student(student):
             return redirect(url_for('delete_student', student_id = student.id))
         courses = get_student_courses(student.id)
         califications = get_student_califications(student, courses)
-        return render_template("teacher/student.html", user = user, student = student.username, califications = califications)
+        return render_template("teacher/student.html", user = user, student = student, califications = califications)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
@@ -517,7 +517,7 @@ def student_course(course):
                     
         current_course = Course.query.filter_by(name = course).first()
         sections = get_sections_data(current_course.id, user.id)
-        return render_template("student/course.html", course = course,  user = user, sections = sections)
+        return render_template("student/course.html", course = current_course,  user = user, sections = sections)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('teacher'))
@@ -539,7 +539,15 @@ def download_task(course,filename):
     return send_from_directory(path, notebook, as_attachment=True)
 
 
-@app.route('/student/courses/<string:course>/<string:username>',methods=["GET"])
+@app.route('/download_submission/<string:course>/<string:student>/<string:task_name>')
+@login_required
+def download_submission(course, student, task_name):
+    path = "courses/" + course + "/submitted/" + student + "/" + task_name
+    notebook = task_name + ".ipynb"
+    return send_from_directory(path, notebook, as_attachment=True)
+
+
+@app.route('/student/course/<string:course>/<string:username>',methods=["GET"])
 @login_required
 def student_course_califications(course, username):
     if check_access("student"):
@@ -552,7 +560,7 @@ def student_course_califications(course, username):
             if calification:
                 tmp_list = [section.name,calification]
                 califications.append(tmp_list)
-        return render_template("student/course_califications.html", course = course,  user = user, califications = califications)
+        return render_template("student/course_califications.html", course = current_course,  user = user, califications = califications)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('teacher'))

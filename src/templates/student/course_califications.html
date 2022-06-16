@@ -1,21 +1,31 @@
 {% extends "base_template.html" %}
 {% block title %}Studen Califications Page{% endblock %}
 {% block content %}
-    Bienvenido {{ name }} <br>
-    
-    <table>
+
+    {% if califications %}
+    <h1 class = "jumbotron-heading" style="font-size: 2em;
+    font-weight: 600;">Sus calificaciones del curso {{ course.name }}:</h1><br>
+    <table class="table table-striped table-dark">
         <tr>
             <th>Seccion</th>
             <th>Tarea</th>
             <th>Calificacion</th>
+            <th></th>
         </tr>
     {% for calification in califications %}
         <tr>
             <td>{{ calification[0] }}</td>
             <td>{{ calification[1].task_name }}</td>
             <td>{{ calification[1].value }}</td>
+            <td>
+                <a class="btn btn-outline-light" href="{{ url_for('download_submission', course=course.name, student=user.username, task_name=calification[1].task_name ) }}"
+                 style="font-weight: 600;"> Descargar entrega</a> 
+            </td>
         </tr>
-
     {% endfor %}
     </table>
+    {% else %}
+    <h1 class = "jumbotron-heading" style="font-size: 2em;
+    font-weight: 600;">Todavía no ha realizado ninguna entrega!</h1><br>
+    {% endif %}
 {% endblock %}  
