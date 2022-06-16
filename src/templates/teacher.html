@@ -1,17 +1,30 @@
 {% extends "base_template.html" %}
 {% block title %}Teacher Main Page{% endblock %}
 {% block content %}
-    Bienvenido {{ name }} <br>
-    <a href="teacher/courses"> Ir a mis Cursos</a> <br>
-    <a href="teacher/califications"> Ir a las Calificaciones</a> <br>
-    <a href="teacher/students"> Ir a la gestion de alumnos</a> <br>
+
+    <h1 class = "jumbotron-heading" style="font-size: 2.4em;
+    font-weight: 600;">Bienvenido {{  user.name  }}</h1><br>
+    <p class="lead" style="padding: 10px; margin-left: 32%; margin-right: 32%;
+    ">Este sitio web es una plataforma orientada a la enseñanza online basada en el lenguaje de programación 
+    Python. <br> Esta está constituida por cursos con tareas corregibles de forma automática creadas por el profesor y descargables por el alumno. La calificación
+    de estas tareas es obtenida de forma inmediata al ser enviada por el alumno.
+    </p>
+    <br>
+
+    <a class="btn btn-primary" href="teacher/courses" style="margin-left: 5%; margin-right: 4%; padding: 10px; font-weight: 600;"> Ir a mis Cursos</a> 
+    <a class="btn btn-primary" href="teacher/califications" style="margin-left: 2%; margin-right: 3%; padding: 10px; font-weight: 600;"> Ir a las Calificaciones</a> 
+    <a class="btn btn-primary" href="teacher/students" style=" margin-left: 2%; margin-right: 2%; padding: 10px; font-weight: 600;" > Ir a la gestión de alumnos</a> 
+    <br><br><br>
 
 
-    <form action = "/logout">
-        <input type = submit value = "Cerrar sesion">
-    </form>
+    
+    <div class="position-relative">
+        <a class="btn btn-outline-secondary" href="/logout"> Cerrar sesión</a> 
+        <a class="btn btn-outline-secondary" href="/change_password"> Cambiar contraseña</a> 
+    </div>
 
-    <form action = "/change_password">
-        <input type = submit value = "Cambiar contraseña">
-    </form>
+
+
+
+
 {% endblock %}  

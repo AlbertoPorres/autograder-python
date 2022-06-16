@@ -44,7 +44,7 @@ def login():
         flash('usuario no registrado')
         return redirect(url_for('login'))
 
-    return render_template("login.html", form = form, user = None)
+    return render_template("login.html", form = form)
 
 @app.route('/logout',methods=["GET", "POST"])
 @login_required
@@ -230,7 +230,7 @@ def teacher_kernel_loader(task):
             return render_template("teacher/kernel_loader.html",  user = user, task = task, course = course.name)
         else:
             os.system("pkill -f -1 jupyter*")
-            return render_template("teacher/error_template.html")
+            return render_template("teacher/error_template.html", user= None)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
@@ -241,7 +241,7 @@ def teacher_kernel_error():
     if check_access("teacher"):
         flash("Algo salio mal")
         os.system("pkill -f -1 jupyter*")
-        return render_template("teacher/error_template.html",  user = user)
+        return render_template("teacher/error_template.html")
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))

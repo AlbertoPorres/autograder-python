@@ -1,15 +1,24 @@
 {% extends "base_template.html" %}
 {% block title %}Studen Main Page{% endblock %}
 {% block content %}
-    Bienvenido {{ name }} <br>
-    <a href="student/courses"> Ir a mis Cursos</a> <br>
-    <a href="student/califications"> Ir a mis Calificaciones</a> <br>
 
-    <form action = "/logout">
-        <input type = submit value = "Cerrar sesion">
-    </form>
+    <h1 class = "jumbotron-heading" style="font-size: 2.4em;
+    font-weight: 600;">Bienvenido {{  user.name  }}</h1><br>
+    <p class="lead" style="padding: 10px; margin-left: 32%; margin-right: 32%;
+    ">Este sitio web es una plataforma orientada a la enseñanza online basada en el lenguaje de programación 
+    Python. <br> Esta está constituida por cursos con tareas corregibles de forma automática creadas por el profesor y descargables por el alumno. La calificación
+    de estas tareas es obtenida de forma inmediata al ser enviada por el alumno.
+    </p>
+    <br>
 
-    <form action = "/change_password">
-        <input type = submit value = "Cambiar contraseña">
-    </form>
+    <a class="btn btn-primary" href="student/courses" style="margin-left: 4%; margin-right: 1%; padding: 10px; font-weight: 600;"> Ir a mis Cursos</a> 
+    <a class="btn btn-primary" href="teacher/califications" style="margin-right: 3%; padding: 10px; font-weight: 600;"> Ir a mis Calificaciones</a> 
+    <br><br><br><br>
+
+    <div class="position-relative">
+        <a class="btn btn-outline-secondary" href="/logout" style="margin-left: 1%;"> Cerrar sesión</a> 
+        <a class="btn btn-outline-secondary" href="/change_password" style="margin-left: 1%;"> Cambiar contraseña</a> 
+    </div>
+
+
 {% endblock %}  

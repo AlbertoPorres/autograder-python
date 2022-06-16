@@ -1,7 +1,9 @@
 {% extends "base_template.html" %}
 {% block title %}Studen Courses Page{% endblock %}
 {% block content %}
-    Bienvenido {{ name }} <br>
+    <h1 class = "jumbotron-heading" style="font-size: 2em;
+    font-weight: 600;">Cursos a los que está inscrito:</h1><br>
+    <br>
     {% for course in courses %}
         <h2>{{ course.name }}</h2>
         <a href="{{ url_for('student_course', course=course.name) }}"> Acceder al curso</a>
