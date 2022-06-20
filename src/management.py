@@ -31,7 +31,9 @@ class NbgraderManager:
 
 
     def grade(self, task, student):
-        self.api.autograde(task,student)
+        result = self.api.autograde(task,student)
+        if not result["success"]:
+            return False
         submision = self.dbConnection.find_submission(task,student)
         # nota sobre 10
         grade = submision.score * 10 / submision.max_score
@@ -46,10 +48,17 @@ class NbgraderManager:
         else:
             return True
 
+    def remove_submission(self, task, student):
+        if self.is_submitted(task,student):
+            self.dbConnection.remove_submission(task,student)
+        
 
     def create_assigment(self, task):
-        self.api.generate_assignment(task)
+        result = self.api.generate_assignment(task)
+        if not result["success"]:
+            return False
+        else:
+            return True
 
     def closeDB(self):
         self.dbConnection.close()
-

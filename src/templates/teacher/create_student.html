@@ -2,24 +2,25 @@
 {% block title %}Change password{% endblock %}
 {% block content %}
 <form action= "" method="POST", enctype="multipart/form-data" id = "mainForm">
+    <div class = "form-group col-md-4 offset-md-4">
     {{ form.hidden_tag() }}
     <p></p>
     <h4>Creación de un nuevo alumno</h4>
     <div>
         {{ form.name.label }}
-        {{ form.name(size=32) }}<br>
+        {{ form.name(size=32, class_ ="form-control") }}<br>
     </div>
     <div>
         {{ form.username.label }}
-        {{ form.username(size=32) }}<br>
+        {{ form.username(size=32, class_ ="form-control") }}<br>
     </div>
     <div>
         {{ form.password.label }}
-        {{ form.password }}<br>
+        {{ form.password(class_ ="form-control") }}<br>
     </div>
     <div>
         {{ form.confirm_password.label }}
-        {{ form.confirm_password }}<br>
+        {{ form.confirm_password(class_ ="form-control") }}<br>
     </div>
     <div>
         <label for="courses">Elija un curso al que registrar al alumno</label>
@@ -30,7 +31,9 @@
             {% endfor %}
         </select>
     </div>
+    <br>
     <button type="button" class="btn btn-dark" data-toggle="modal" data-target="#createModal">Crear</button>
+</div>
 </form>
 
 <!-- Modal -->

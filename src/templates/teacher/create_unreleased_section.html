@@ -2,7 +2,7 @@
 {% block title %}Create Course{% endblock %}
 {% block content %}
 <h1 class = "jumbotron-heading" style="font-size: 2em;
-    font-weight: 600;">Creación de sección de contenido</h1><br>
+    font-weight: 600;">Creación de sección de contenido con tarea manual:</h1><br>
 
 <form id = "mainForm" method = "POST" enctype="multipart/form-data" >
     <div class = "form-group col-md-4 offset-md-4">
@@ -12,15 +12,11 @@
         <input type="text" id ="task_name" name = "task_name" class ="form-control"><br> 
         <label for="content"> Archivo de contenido teórico: </label>
         <input type = file name = content_file><br> <br> 
-        <label for="task"> Archivo tarea: </label> <br> 
-        <input type = file name = task_file><br> <br> 
-        <p style="color: blue;">El archivo tarea será renombrado al nombre de la tarea</p>
-        <input type= submit  value = "Crear sección">
+        <input type= submit  value = "Crear sección no publicada">
     </div>
 </form>
 
 
 
 {% endblock %}  
-
 

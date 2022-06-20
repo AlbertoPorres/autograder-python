@@ -20,9 +20,8 @@
                         <td>{{ student_in.name }}</td>
                         <td>{{ student_in.username }}</td>
                         <td> 
-                            <form action="{{ url_for('teacher_quick_student', course = course, student = student_in.username) }}" >
-                                <input type="submit" value = "Sacar del curso" />
-                            </form>
+                            <a class="btn btn-outline-danger" href="#" data-toggle="modal" data-target="#confirm-quick-{{ student_in.id }}"
+                            style="font-weight: 600;">Sacar del curso</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -30,10 +29,6 @@
             </table>
         </div>
 
-
-
-
-    
         <div class = "table-responsive col-md-6">
             <h2 class = "sub-header"> Alumnos fuera del curso {{ course }}:</h2>
             <table class = "table table-striped">
@@ -50,15 +45,56 @@
                         <td>{{ student_out.name }}</td>
                         <td>{{ student_out.username }}</td>
                         <td> 
-                            <form action="{{ url_for('teacher_enrroll_student', course = course, student = student_out.username) }}" >
-                                <input type="submit" value = "Ingresar en el curso" />
-                            </form>
+                            <a class="btn btn-outline-success" href="#" data-toggle="modal" data-target="#confirm-enrroll-{{ student_out.id }}"
+                            style="font-weight: 600;">Ingresar en el curso</a>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-
     </div>
+
+
+    {% for student_in in students_in %}
+    <div class="modal fade" id="confirm-quick-{{ student_in.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">¿Desea realizar esta acción?</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+    
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <a class="btn btn-outline-success" href="{{ url_for('teacher_quick_student', course = course, student = student_in.username) }}">Confirmar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+
+    {% for student_out in students_out %}
+    <div class="modal fade" id="confirm-enrroll-{{ student_out.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">¿Desea realizar esta acción?</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+    
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <a class="btn btn-outline-success" href="{{ url_for('teacher_enrroll_student', course = course, student = student_out.username) }}">Confirmar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
 {% endblock %}  

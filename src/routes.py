@@ -1,17 +1,13 @@
-import shutil
-import time
 from flask import render_template, request, redirect, url_for, flash, send_from_directory
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
-from pyparsing import removeQuotes
-from requests import session
-import werkzeug
 from src.forms import LoginForm, ChagePasswordForm, CreateStudentForm, CreateCourseForm
 from src.management import NbgraderManager
-import os
 from src.models import User, Course, Section, Calification, CourseMembers, UnreleasedSection
 from src import app, db
-from werkzeug.utils import secure_filename
-from pathlib import Path 
+import os
+import shutil
+import time
+
 
 #Login manager
 login_manager = LoginManager()
@@ -218,33 +214,6 @@ def teacher_create_course():
         return redirect(url_for('student'))
 
 
-@app.route('/teacher/kernel-loader/<string:task>',methods=["GET"])
-@login_required
-def teacher_kernel_loader(task):
-    if check_access("teacher"):
-        time.sleep(5)
-        user = get_current_User(current_user.get_id())
-        section = UnreleasedSection.query.filter_by(task_name = task).first()
-        if section:
-            course = Course.query.filter_by(id = section.course_id).first()
-            return render_template("teacher/kernel_loader.html",  user = user, task = task, course = course.name)
-        else:
-            os.system("pkill -f -1 jupyter*")
-            return render_template("teacher/error_template.html", user= None)
-    else:
-        flash("Acceso no permitido")
-        return redirect(url_for('student'))
-
-@app.route('/teacher/kernel-loader/',methods=["GET"])
-@login_required
-def teacher_kernel_error():
-    if check_access("teacher"):
-        flash("Algo salio mal")
-        os.system("pkill -f -1 jupyter*")
-        return render_template("teacher/error_template.html")
-    else:
-        flash("Acceso no permitido")
-        return redirect(url_for('student'))
 
 @app.route('/teacher/<string:course>/create_section',methods=["GET", "POST"])
 @login_required
@@ -253,103 +222,261 @@ def teacher_create_section(course):
         user = get_current_User(current_user.get_id())
         course = Course.query.filter_by(name = course).first()
         if request.method == 'POST':
-            
-            try:
-                # confirmacion de la tarea creada indirectamente
-                request.form["confirm"]
-                unreleased = UnreleasedSection.query.filter_by(teacher_id = user.id, course_id = course.id).all()
-                for unrelease in unreleased:
-                    section = Section(course_id = course.id, name = unrelease.name, content_name = unrelease.content_name, task_name = unrelease.task_name)
-                    manager = NbgraderManager(course.name)
-                    manager.create_assigment(section.task_name)
-                    manager.closeDB()
-                    db.session.add(section)
-                    db.session.delete(unrelease)
-                    db.session.commit()
-                
-                os.system("pkill -f -1 jupyter*")
-                flash("Confirmado")
-                return render_template("teacher/create_section.html", name = user.name, activated = False)
-            except werkzeug.exceptions.BadRequestKeyError:
+            content_file = request.files['content_file']
+            task_file = request.files['task_file']
+            section_name = request.form.get('name')
+            task_name = request.form.get('task_name')
+            if content_file and task_file and section_name and task_name:
+                if not ('.' in task_file.filename and task_file.filename.rsplit('.',1)[1].lower() == 'ipynb'):
+                    flash( task_file.filename.rsplit('.',1)[1].lower())
+                    flash("La extension de la tarea debe de ser .ipynb")
+                    return render_template("teacher/create_section.html", user = user)
+                section = Section(course_id = course.id, name = section_name, content_name = content_file.filename, task_name = task_name)
+                unreleased = UnreleasedSection(teacher_id = user.id, course_id = course.id, name = section_name, content_name = content_file.filename, task_name = task_name)
                 try:
-                    # si se ha creado la seccion de forma directa:
-                    content_file = request.files['content_file']
-                    task_file = request.files['task_file']
-                    section_name = request.form.get('name')
-                    task_name = request.form.get('task_name')
-                    request.form["directly"]
-                    if content_file and task_file and section_name and task_name:
-                        if not ('.' in task_file.filename and (task_file.filename.rsplit('.',1)[1].lower() in {'.ipynb'})):
-                            flash("La extension de la tarea debe de ser .ipynb")
-                            return render_template("teacher/create_section.html", name = user.name, activated = False)
-                        section = Section(course_id = course.id, name = section_name, content_name = content_file.filename, task_name = task_name)
-                        unreleased = UnreleasedSection(teacher_id = user.id, course_id = course.id, name = section_name, content_name = content_file.filename, task_name = task_name)
-                        try:
-                            db.session.add(section)
-                            db.session.add(unreleased)
-                            db.session.commit()
-                        except Exception:
-                            db.session.rollback()
-                            flash("No permitido: Algún dato ya pertenece a otra sección")
-                            return render_template("teacher/create_section.html",  user = user, activated = False)
+                    db.session.add(section)
+                    db.session.add(unreleased)
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+                    flash("No permitido: Algún dato ya pertenece a otra sección")
+                    return render_template("teacher/create_section.html",  user = user)
 
-                        db.session.delete(unreleased)
-                        db.session.commit()
-                        content_path = "courses/" + course.name + "/content"
-                        source_path = "courses/" + course.name + "/source/" + task_name
-                        os.mkdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), source_path))
-                        content_file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),content_path ,content_file.filename))
-                        task_file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),source_path ,task_name + ".ipynb"))
-                        manager = NbgraderManager(course.name)
-                        manager.create_assigment(task_name)
-                        manager.closeDB()
-                        flash("Sección creada con exito")
-                        return redirect(url_for('teacher_courses_course', course = course.name))
-                    else:
-                        flash("Rellene todos los campos necesarios para realizar esta acción")
-                        return render_template("teacher/create_section.html",  user = user, activated = False)
-                except werkzeug.exceptions.BadRequestKeyError:
-                    # si se crea de forma manual activando el kernel
-                    if content_file and section_name and task_name:
-                        section = Section(course_id = course.id, name = section_name, content_name = content_file.filename, task_name = task_name)
-                        unreleased = UnreleasedSection(teacher_id = user.id, course_id = course.id, name = section_name, content_name = content_file.filename, task_name = task_name)
-                        try:
-                            db.session.add(section)
-                            db.session.add(unreleased)
-                            db.session.commit()
-                        except Exception:
-                            db.session.rollback()
-                            flash("No permitido: Algún dato ya pertenece a otra sección")
-                            return render_template("teacher/create_section.html",  user = user, activated = False)
-                        db.session.delete(section)
-                        db.session.commit()
-                        content_path = "courses/" + course.name + "/content"
-                        source_path = "courses/" + course.name + "/source/" + task_name
-                        os.mkdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), source_path))
-                        content_file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),content_path ,content_file.filename))
+                db.session.delete(unreleased)
+                db.session.commit()
+                source_path = "courses/" + course.name + "/source/" + task_name
+                os.mkdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), source_path))
+                task_file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),source_path ,task_name + ".ipynb"))
+                manager = NbgraderManager(course.name)
+                if not manager.create_assigment(task_name):
+                    flash("Hay algún error en el archivo tarea")
+                    db.session.delete(section)
+                    db.session.commit()
+                    shutil.rmtree(os.path.join(os.path.abspath(os.path.dirname(__file__)),source_path))
+                    return render_template("teacher/create_section.html",  user = user)
 
-                        source_path = source_path + "/"
-                        destiny = os.path.join(os.path.abspath(os.path.dirname(__file__)), source_path)
-                        base_notebook_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/base_notebook.ipynb" )
-                        shutil.copy(base_notebook_path, destiny)
-
-                        new_name = os.path.join(os.path.abspath(os.path.dirname(__file__)), source_path + task_name + ".ipynb")
-                        current_name = os.path.join(os.path.abspath(os.path.dirname(__file__)), source_path +  "base_notebook.ipynb")
-                        os.rename(current_name, new_name)
-
-                        os.system("pkill -f -1 jupyter*")
-                        os.system("jupyter notebook --ip='0.0.0.0' --no-browser --allow-root --port=8888 &")
-                    else:
-                        flash("Rellene todos los campos necesarios para realizar esta acción")
-                        return render_template("teacher/create_section.html",  user = user, activated = False)
-                    return render_template("teacher/create_section.html",  user = user, activated = True)
-            
+                
+                content_path = "courses/" + course.name + "/content"
+                content_file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),content_path ,content_file.filename))
+                manager.closeDB()
+                relationships = CourseMembers.query.filter_by(course_id = course.id).all()
+                for relation in relationships:
+                    student = User.query.filter_by(id = relation.student_id).first()
+                    submitted_path = "courses/" + course.name + "/submitted/" + student.username + "/" + section.task_name
+                    os.mkdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), submitted_path))
+                flash("Sección creada con exito")
+                return redirect(url_for('teacher_courses_course', course = course.name))
+            else:
+                flash("Rellene todos los campos necesarios para realizar esta acción")
+                return render_template("teacher/create_section.html",  user = user)
         else:
-            return render_template("teacher/create_section.html",  user = user, activated = False)
+            return render_template("teacher/create_section.html",  user = user)
     else:
         flash("Acceso no permitido")
         return redirect(url_for('student'))
 
+
+@app.route('/teacher/<string:course>/create_unreleased_section',methods=["GET", "POST"])
+@login_required
+def teacher_create_unreleased_section(course):
+    if check_access("teacher"):
+        user = get_current_User(current_user.get_id())
+        course = Course.query.filter_by(name = course).first()
+        if request.method == 'POST':
+            content_file = request.files['content_file']
+            section_name = request.form.get('name')
+            task_name = request.form.get('task_name')
+            if content_file and section_name and task_name:
+                section = Section(course_id = course.id, name = section_name, content_name = content_file.filename, task_name = task_name)
+                unreleased = UnreleasedSection(teacher_id = user.id, course_id = course.id, name = section_name, content_name = content_file.filename, task_name = task_name)
+                try:
+                    db.session.add(section)
+                    db.session.add(unreleased)
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+                    flash("No permitido: Algún dato ya pertenece a otra sección")
+                    return render_template("teacher/create_unreleased_section.html",  user = user)
+                db.session.delete(section)
+                db.session.commit()
+                content_path = "courses/" + course.name + "/content"
+                source_path = "courses/" + course.name + "/source/" + task_name
+                os.mkdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), source_path))
+                content_file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),content_path ,content_file.filename))
+                source_path = source_path + "/"
+                destiny = os.path.join(os.path.abspath(os.path.dirname(__file__)), source_path)
+                base_notebook_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/base_notebook.ipynb" )
+                shutil.copy(base_notebook_path, destiny)
+                new_name = os.path.join(os.path.abspath(os.path.dirname(__file__)), source_path + task_name + ".ipynb")
+                current_name = os.path.join(os.path.abspath(os.path.dirname(__file__)), source_path +  "base_notebook.ipynb")
+                os.rename(current_name, new_name)
+                flash("Sección no publicada creada con exito")
+                return redirect(url_for('teacher_unreleased_sections', course = course.name))
+                
+            else:
+                flash("Rellene todos los campos necesarios para realizar esta acción")
+                return render_template("teacher/create_unreleased_section.html",  user = user)
+        else:
+            return render_template("teacher/create_unreleased_section.html",  user = user)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+@app.route('/teacher/<string:course>/unreleased_sections',methods=["GET"])
+@login_required
+def teacher_unreleased_sections(course):
+    if check_access("teacher"):
+        user = get_current_User(current_user.get_id())
+        course = Course.query.filter_by(name = course).first()
+        return render_template("teacher/unreleased_sections.html",course = course, user = user, sections = UnreleasedSection.query.filter_by(teacher_id = user.id, course_id = course.id).all())
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+
+@app.route('/edit_task/<string:course>/<string:section>',methods=["GET"])
+@login_required
+def edit_task(course, section):
+    if check_access("teacher"):
+        course = Course.query.filter_by(name = course).first()
+        user = get_current_User(current_user.get_id())
+        unreleased = UnreleasedSection.query.filter_by(name = section).first()
+        sections =  UnreleasedSection.query.filter_by(teacher_id = user.id, course_id = course.id).all()
+        if not unreleased:
+            flash("Accion no permitida")
+            return render_template("teacher/unreleased_sections.html",course = course, user = user, sections =sections)
+        os.system("pkill -f -1 jupyter*")
+        os.system("jupyter notebook --ip='0.0.0.0' --no-browser --allow-root --port=8888 &")
+        time.sleep(4)
+        return render_template("teacher/kernel_loader.html",course = course, task = unreleased.task_name)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+
+@app.route('/publish_section/<string:course>/<string:section>',methods=["GET"])
+@login_required
+def publish_section(course, section):
+    if check_access("teacher"):
+        course = Course.query.filter_by(name = course).first()
+        user = get_current_User(current_user.get_id())
+        unreleased = UnreleasedSection.query.filter_by(name = section).first()
+        if not unreleased:
+            flash("Accion no permitida")
+            return render_template("teacher/unreleased_sections.html",course = course, user = user, sections = UnreleasedSection.query.filter_by(teacher_id = user.id, course_id = course.id).all())
+        section = Section(course_id = unreleased.course_id, name = unreleased.name, content_name = unreleased.content_name, task_name = unreleased.task_name)
+        manager = NbgraderManager(course.name)
+        if not manager.create_assigment(section.task_name):
+            flash("Hay algún problema en su tarea, compruebe su contenido")
+            manager.closeDB()
+            return render_template("teacher/unreleased_sections.html",course = course, user = user, sections = UnreleasedSection.query.filter_by(teacher_id = user.id, course_id = course.id).all())
+        manager.closeDB()
+        db.session.add(section)
+        db.session.delete(unreleased)
+        db.session.commit()
+        relationships = CourseMembers.query.filter_by(course_id = course.id).all()
+        for relation in relationships:
+            student = User.query.filter_by(id = relation.student_id).first()
+            path = "courses/" + course.name + "/submitted/" + student.username + "/" + section.task_name
+            path_ = os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
+            os.mkdir(path_)
+        return render_template("teacher/unreleased_sections.html",course = course, user = user, sections = UnreleasedSection.query.filter_by(teacher_id = user.id, course_id = course.id).all())
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+@app.route('/cancel_section/<string:course>/<string:section>',methods=["GET"])
+@login_required
+def cancel_section(course, section):
+    if check_access("teacher"):
+        course = Course.query.filter_by(name = course).first()
+        user = get_current_User(current_user.get_id())
+        unreleased = UnreleasedSection.query.filter_by(name = section).first()
+        if not unreleased:
+            flash("Accion no permitida")
+            return render_template("teacher/unreleased_sections.html",course = course, user = user, sections = UnreleasedSection.query.filter_by(teacher_id = user.id, course_id = course.id).all())
+        path_content = "courses/" + course.name + "/content/" + unreleased.content_name
+        path_task = "courses/" + course.name + "/source/" + unreleased.task_name
+        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)),path_content))
+        shutil.rmtree(os.path.join(os.path.abspath(os.path.dirname(__file__)),path_task))
+        db.session.delete(unreleased)
+        db.session.commit()
+        return render_template("teacher/unreleased_sections.html",course = course, user = user, sections = UnreleasedSection.query.filter_by(teacher_id = user.id, course_id = course.id).all())
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+
+@app.route('/delete_course/<string:course_name>',methods=["GET"])
+@login_required
+def delete_course(course_name):
+    if check_access("teacher"):
+        course = Course.query.filter_by(name = course_name).first()
+        user = get_current_User(current_user.get_id())
+        if not course:
+            courses = Course.query.filter_by(teacher_id = user.id).all()
+            flash("Acción no permitida")
+            return render_template("teacher/courses.html",  user = user, courses = courses)
+        course_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name)
+        shutil.rmtree(course_path)
+        sections = get_course_sections(course)
+        for section in sections:
+            califications = Calification.query.filter_by(section_id = section.id).all()
+            for calification in califications:
+                db.session.delete(calification)
+            db.session.delete(section)
+        relationships = CourseMembers.query.filter_by(course_id = course.id).all()
+        for relation in relationships:
+            db.session.delete(relation)
+        db.session.delete(course)
+        db.session.commit()
+        flash("Curso borrado con exito")
+        return render_template("teacher/courses.html",  user = user, courses = Course.query.filter_by(teacher_id = user.id).all())
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+
+
+
+@app.route('/delete_section/<string:course_name>/<string:section_name>',methods=["GET"])
+@login_required
+def delete_section(course_name,section_name):
+    if check_access("teacher"):
+        section = Section.query.filter_by(name = section_name).first()
+        course = Course.query.filter_by(name = course_name).first()
+        user = get_current_User(current_user.get_id())
+        if not section:
+            sections = Section.query.filter_by(course_id = course.id).all()
+            flash("Acción no permitida")
+            return render_template("teacher/course.html",  user = user, sections = sections, course = course)
+
+        califications = Calification.query.filter_by(section_id = section.id).all()
+        for calification in califications:
+            db.session.delete(calification)  
+        
+        manager = NbgraderManager(course.name)
+        relationships = CourseMembers.query.filter_by(course_id = course.id).all()
+        for relation in relationships:
+            student = User.query.filter_by(id = relation.student_id).first()
+            path = "courses/" + course.name + "/submitted/" + student.username + "/" + section.task_name
+            path_ = os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
+            shutil.rmtree(path_)
+            manager.remove_submission(section.task_name, student.username)
+
+        content_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/content/" + section.content_name)
+        os.remove(content_path)
+        source_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/source/" + section.task_name)
+        shutil.rmtree(source_path)
+        release_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/release/" + section.task_name)
+        shutil.rmtree(release_path)
+        db.session.delete(section)  
+        db.session.commit()
+        flash("Sección borrada con exito")
+        return render_template("teacher/course.html",  user = user, sections = Section.query.filter_by(course_id = course.id).all(), course = course)
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
 
 @app.route('/teacher/califications',methods=["GET"])
 @login_required
@@ -489,7 +616,8 @@ def student_courses():
 def student_course(course):
     if check_access("student"):
         user = get_current_User(current_user.get_id())
-
+        current_course = Course.query.filter_by(name = course).first()
+        sections = get_sections_data(current_course.id, user.id)
         if request.method == 'POST':
             if request.files:
                 file = request.files['file']
@@ -504,19 +632,21 @@ def student_course(course):
                     if preventive:
                         flash("Tarea entregada previamente")
                         return(redirect(request.url))
-                    else:
-                        flash("Su tarea ha sido enviada")
+                    else:         
                         path = "courses/" + course + "/submitted/" + user.username + "/" + task 
                         file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),path ,file.filename))
                         manager = NbgraderManager(course)
                         score = manager.grade(task,user.username)
+                        if not score:
+                            flash("Hay algo erroneo en su archivo de entrega")
+                            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)),path + "/" + file.filename))
+                            return render_template("student/course.html", course = current_course,  user = user, sections = sections)
                         calification = Calification(student_id = user.id, section_id = section, task_name = task, value = score)
                         db.session.add(calification)
                         db.session.commit()
                         manager.closeDB()
-                    
-        current_course = Course.query.filter_by(name = course).first()
-        sections = get_sections_data(current_course.id, user.id)
+                        flash("Su tarea ha sido enviada")
+                        return render_template("student/course.html", course = current_course,  user = user, sections = get_sections_data(current_course.id, user.id))
         return render_template("student/course.html", course = current_course,  user = user, sections = sections)
     else:
         flash("Acceso no permitido")
@@ -584,6 +714,7 @@ def student_califications():
 
 def get_current_User(id):
     return User.query.filter_by(id=id).first() 
+
 
 # LISTA DE TODOS LOS CURSOS DE UN ALUMNO
 def get_student_courses(student_id):
@@ -702,25 +833,4 @@ def quick_from_course(course,student):
         db.session.commit()
 
 
-            
-
-
-# @app.route('/teacher',methods=["GET", "POST"])
-# @login_required
-# def teacher():
-#     # TEST DE APERTURA DE NOTEBOOKS CON JUPYTER DESDE LA PAGINA PRINCIPAL DEL MAESTRO
-#     if request.method == 'POST':
-#         if request.form.get('action1') == 'RUN NOTEBOOK':
-#             #subprocess.Popen("jupyter notebook --ip='0.0.0.0' --port=8888")
-#             os.system("jupyter notebook --ip='0.0.0.0' --no-browser --allow-root --port=8888 &")
-#             #time.sleep(4)
-#             #webbrowser.open_new_tab("http://127.0.0.1:8888/notebooks/Curso%20Python%20V.0.ipynb")
-#             #webbrowser.open_new_tab("https://www.google.com/")
-#         if request.form.get('action2') == 'STOP NOTEBOOK':
-#             os.system("pkill -f -1 jupyter*")
-#             #subprocess.Popen("jupyter notebook stop 8888")
-
-#         if request.form.get('action3') == 'OPENTAB':
-#             webbrowser.open_new_tab("https://www.google.com/")
-#             #subprocess.Popen("jupyter notebook stop 8888")
-#     return render_template("teacher.html")
+        

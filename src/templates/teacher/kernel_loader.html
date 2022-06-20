@@ -1,8 +1,8 @@
 {% extends "base_template.html" %}
-{% block title %}Create task{% endblock %}
+{% block title %}task{% endblock %}
 {% block content %}
 El kernel está listo:
-<a href="http://localhost:8888/notebooks/src/courses/{{ course }}/source/{{ task }}/{{ task }}.ipynb"> Ir a la tarea</a> <br>
+<a href="http://localhost:8888/notebooks/src/courses/{{ course.name }}/source/{{ task }}/{{ task }}.ipynb"> Ir a la tarea</a> <br>
 {% endblock %}  
 
 

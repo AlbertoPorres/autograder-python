@@ -2,18 +2,18 @@
 {% block title %}Create Course{% endblock %}
 {% block content %}
 <form action= "" method="POST", enctype="multipart/form-data" id = "mainForm">
+    <div class = "form-group col-md-4 offset-md-4">
     {{ form.hidden_tag() }}
     <p></p>
     <h4>Creación de un nuevo curso</h4>
-    <div>
         {{ form.name.label }}
-        {{ form.name(size=32) }}<br>
-    </div>
-    <div>
+        {{ form.name(size=32, class_ ="form-control") }}<br>
+
         {{ form.description.label }}
-        {{ form.description(size=700) }}<br>
-    </div>
+        {{ form.description(size=700, class_ ="form-control") }}<br>
+
     <button type="button" class="btn btn-dark" data-toggle="modal" data-target="#createModal">Crear</button>
+</div>
 </form>
 
 <!-- Modal -->

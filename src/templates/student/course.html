@@ -1,7 +1,8 @@
 {% extends "base_template.html" %}
 {% block title %}Course Page{% endblock %}
 {% block content %}
-     <h1 class = "jumbotron-heading" style="font-size: 2em;
+    {% if sections %}
+    <h1 class = "jumbotron-heading" style="font-size: 2em;
     font-weight: 600;">{{ course.name }}</h1><br>
 
     {% for section in sections %}
@@ -39,10 +40,13 @@
                 </td>
                 {% endif %}
             </tr>
-            
             </tbody>
         </table>
     </div>
     <br><br>
     {% endfor %}
+    {% else %}
+    <h1 class = "jumbotron-heading" style="font-size: 2em;
+    font-weight: 600;">Todavía no hay ninguna sección de contenido</h1><br>
+    {% endif %}
 {% endblock %}  
