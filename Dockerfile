@@ -10,8 +10,13 @@ WORKDIR /project
 
 COPY . /project
 
+# extensiones necesarias para el funcionamiento de Nbgrader
 RUN pip3 --no-cache-dir install -r requirements.txt
 RUN jupyter nbextension install --sys-prefix --py nbgrader --overwrite
 RUN jupyter nbextension enable --sys-prefix --py nbgrader
 RUN jupyter serverextension enable --sys-prefix --py nbgrader
-#CMD ["python3", "src/app.py"]
+
+
+
+
+

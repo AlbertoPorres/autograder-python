@@ -9,19 +9,24 @@
     <div class="container mb-3 mt-3">
         <table  class="table table-striped table-bordered" style="width:100%; border: 2px solid;">
             <thead>
-                <th colspan="2"><h2>{{ section.name }}</h2></td>
+                <th colspan="3"><h2>{{ section.name }}</h2></td>
             </thead>
             <tbody>
             <tr>
                 <td>
                     <a class="btn btn-outline-primary" href="{{ url_for('download_content', course=course.name, filename=section.content_name) }}"
-                    style="font-weight: 600;">Descargar contenido teorico de {{ section.name }}</a>
+                    style="font-weight: 600;">Descargar contenido teórico</a>
+                </td>
+                <td>
+                    <a class="btn btn-outline-primary" href="{{ url_for('download_source', course=course.name, filename=section.task_name) }}"
+                    style="font-weight: 600;">Descargar tarea versión profesor</a>
                 </td>
                 <td>
                     <a class="btn btn-outline-primary" href="{{ url_for('download_task', course=course.name, filename=section.task_name) }}"
-                    style="font-weight: 600;">Descargar tarea de {{ section.name }}</a>
+                    style="font-weight: 600;">Descargar tarea versión estudiante </a>
                 </td>
             </tr>
+
             </tbody>
         </table>
         <a class="btn btn-outline-danger" href="#" data-toggle="modal" data-target="#confirm-del-{{ section.id }}"
@@ -34,9 +39,12 @@
     font-weight: 600;">Todavía no hay ninguna sección de contenido</h1><br>
     {% endif %}
 
-    <a class="btn btn-primary" href="{{ url_for('teacher_create_section', course = course.name) }}" style="margin-left: 2%; margin-right: 4%; padding: 10px; font-weight: 600;"> Crear sección de forma directa</a> 
-    <a class="btn btn-primary" href="{{ url_for('teacher_create_unreleased_section', course = course.name) }}" style="margin-left: 2%; margin-right: 3%; padding: 10px; font-weight: 600;"> Crear sección con tarea creada manualmente</a> 
-    <a class="btn btn-primary" href="{{ url_for('teacher_unreleased_sections', course = course.name) }}" style=" margin-left: 2%; margin-right: 2%; padding: 10px; font-weight: 600;" > Ir a las secciones sin publicar</a> 
+    <a class="btn btn-primary" href="{{ url_for('teacher_create_section', course = course.name) }}"
+     style="margin-left: 2%; margin-right: 4%; padding: 10px; font-weight: 600;"> Crear sección de forma directa</a> 
+    <a class="btn btn-primary" href="{{ url_for('teacher_create_unreleased_section', course = course.name) }}" 
+    style="margin-left: 2%; margin-right: 3%; padding: 10px; font-weight: 600;"> Crear sección con tarea creada manualmente</a> 
+    <a class="btn btn-primary" href="{{ url_for('teacher_unreleased_sections', course = course.name) }}" 
+    style=" margin-left: 2%; margin-right: 2%; padding: 10px; font-weight: 600;" > Ir a las secciones sin publicar</a> 
     <br><br><br>
 
     {% for section in sections %}

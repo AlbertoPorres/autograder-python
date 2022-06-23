@@ -8,6 +8,9 @@ import os
 import shutil
 import time
 
+# KEEP JUPYTER NOTEBOOK RUNNING
+os.system("pkill -f -1 jupyter*")
+os.system("jupyter notebook --ip='0.0.0.0' --no-browser --allow-root --port=8888 --notebook-dir=src/courses&")
 
 #Login manager
 login_manager = LoginManager()
@@ -25,7 +28,6 @@ def index():
 
 @app.route('/login',methods=["GET", "POST"])
 def login():
-
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -334,25 +336,6 @@ def teacher_unreleased_sections(course):
         return redirect(url_for('student'))
 
 
-@app.route('/edit_task/<string:course>/<string:section>',methods=["GET"])
-@login_required
-def edit_task(course, section):
-    if check_access("teacher"):
-        course = Course.query.filter_by(name = course).first()
-        user = get_current_User(current_user.get_id())
-        unreleased = UnreleasedSection.query.filter_by(name = section).first()
-        sections =  UnreleasedSection.query.filter_by(teacher_id = user.id, course_id = course.id).all()
-        if not unreleased:
-            flash("Accion no permitida")
-            return render_template("teacher/unreleased_sections.html",course = course, user = user, sections =sections)
-        os.system("pkill -f -1 jupyter*")
-        os.system("jupyter notebook --ip='0.0.0.0' --no-browser --allow-root --port=8888 &")
-        time.sleep(4)
-        return render_template("teacher/kernel_loader.html",course = course, task = unreleased.task_name)
-    else:
-        flash("Acceso no permitido")
-        return redirect(url_for('student'))
-
 
 @app.route('/publish_section/<string:course>/<string:section>',methods=["GET"])
 @login_required
@@ -645,6 +628,8 @@ def student_course(course):
                         db.session.add(calification)
                         db.session.commit()
                         manager.closeDB()
+                        path = os.path.join(os.path.abspath(os.path.dirname(__file__)),  "courses/" + course + "/autograded/" + user.username)
+                        shutil.rmtree(path)
                         flash("Su tarea ha sido enviada")
                         return render_template("student/course.html", course = current_course,  user = user, sections = get_sections_data(current_course.id, user.id))
         return render_template("student/course.html", course = current_course,  user = user, sections = sections)
@@ -665,6 +650,14 @@ def download_content(course,filename):
 @login_required
 def download_task(course,filename):
     path = "courses/" + course + "/release/" + filename
+    notebook = filename + ".ipynb"
+    return send_from_directory(path, notebook, as_attachment=True)
+
+
+@app.route('/download_source/<string:course>/<string:filename>')
+@login_required
+def download_source(course,filename):
+    path = "courses/" + course + "/source/" + filename
     notebook = filename + ".ipynb"
     return send_from_directory(path, notebook, as_attachment=True)
 

@@ -3,7 +3,6 @@ from multiprocessing import Manager
 from nbgrader.apps import NbGraderAPI
 from nbgrader.api import Gradebook
 from traitlets.config import Config
-from nbgrader.coursedir import CourseDirectory
 
 
 # PRUEBA DE MANEJO DE LA API Y BASE DE DATOS DE NBGRADER 
