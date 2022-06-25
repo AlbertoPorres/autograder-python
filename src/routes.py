@@ -1,3 +1,12 @@
+""" routes class module.
+
+    Web endpoints hanndler class module.
+
+    Author: Alberto Porres Fernández
+    Date: 07/07/2022
+"""
+
+
 from flask import render_template, request, redirect, url_for, flash, send_from_directory
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 from src.forms import LoginForm, ChagePasswordForm, CreateStudentForm, CreateCourseForm
@@ -6,7 +15,6 @@ from src.models import User, Course, Section, Calification, CourseMembers, Unrel
 from src import app, db
 import os
 import shutil
-import time
 
 # KEEP JUPYTER NOTEBOOK RUNNING
 os.system("pkill -f -1 jupyter*")
@@ -139,6 +147,35 @@ def teacher_course_students(course):
         flash("Acceso no permitido")
         return redirect(url_for('student'))
 
+
+@app.route('/teacher/delete_submission/<string:course>/<string:student>/<string:task_name>',methods=["GET"])
+@login_required
+def teacher_delete_submission(course,student,task_name):
+    if check_access("teacher"):
+        user = get_current_User(current_user.get_id())
+        course = Course.query.filter_by(name = course).first()
+        student = User.query.filter_by(username = student).first()
+        section = Section.query.filter_by(task_name = task_name).first()
+        calification = Calification.query.filter_by(student_id=student.id, section_id=section.id).first()
+        if not calification:
+            flash('Esta entrega ya habia sido eliminada')
+            return redirect(url_for("teacher_students_student", student = student.username))
+        manager = NbgraderManager(course.name)
+        manager.remove_submission(section.task_name,student.username)
+        manager.closeDB()
+        path_submission= "courses/" + course.name + "/submitted/" + student.username + "/" + section.task_name + "/" + section.task_name + ".ipynb"
+        path_feedback= "courses/" + course.name + "/feedback/" + student.username + "/" + section.task_name + "/" + section.task_name + ".html"
+        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)),path_submission))
+        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)),path_feedback))
+        db.session.delete(calification)
+        db.session.commit()
+        flash('Entrega eliminada')
+        return redirect(url_for("teacher_students_student", student = student.username))
+    else:
+        flash("Acceso no permitido")
+        return redirect(url_for('student'))
+
+
 @app.route('/teacher/quick/<string:course>/<string:student>',methods=["GET"])
 @login_required
 def teacher_quick_student(course,student):
@@ -176,7 +213,7 @@ def teacher_enrroll_student(course,student):
             db.session.rollback()
             flash("Alumno existente en el curso")
             return redirect(url_for("teacher_course_students",course = course.name))
-        make_dir_submissions(course.name, student.username)
+        make_dir_submissions_feedback(course.name, student.username)
         flash("Alumno añadido al curso")
         return redirect(url_for("teacher_course_students",course = course.name))
 
@@ -265,7 +302,9 @@ def teacher_create_section(course):
                 for relation in relationships:
                     student = User.query.filter_by(id = relation.student_id).first()
                     submitted_path = "courses/" + course.name + "/submitted/" + student.username + "/" + section.task_name
+                    feedback_path = "courses/" + course.name + "/feedback/" + student.username + "/" + section.task_name
                     os.mkdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), submitted_path))
+                    os.mkdir(os.path.join(os.path.abspath(os.path.dirname(__file__)), feedback_path))
                 flash("Sección creada con exito")
                 return redirect(url_for('teacher_courses_course', course = course.name))
             else:
@@ -360,9 +399,10 @@ def publish_section(course, section):
         relationships = CourseMembers.query.filter_by(course_id = course.id).all()
         for relation in relationships:
             student = User.query.filter_by(id = relation.student_id).first()
-            path = "courses/" + course.name + "/submitted/" + student.username + "/" + section.task_name
-            path_ = os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
-            os.mkdir(path_)
+            path_submitted = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/submitted/" + student.username + "/" + section.task_name)
+            path_feedback = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/feedback/" + student.username + "/" + section.task_name)
+            os.mkdir(path_submitted)
+            os.mkdir(path_feedback)
         return render_template("teacher/unreleased_sections.html",course = course, user = user, sections = UnreleasedSection.query.filter_by(teacher_id = user.id, course_id = course.id).all())
     else:
         flash("Acceso no permitido")
@@ -442,9 +482,10 @@ def delete_section(course_name,section_name):
         relationships = CourseMembers.query.filter_by(course_id = course.id).all()
         for relation in relationships:
             student = User.query.filter_by(id = relation.student_id).first()
-            path = "courses/" + course.name + "/submitted/" + student.username + "/" + section.task_name
-            path_ = os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
-            shutil.rmtree(path_)
+            path_submitted = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/submitted/" + student.username + "/" + section.task_name)
+            path_feedback = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/feedback/" + student.username + "/" + section.task_name)
+            shutil.rmtree(path_submitted)
+            shutil.rmtree(path_feedback)
             manager.remove_submission(section.task_name, student.username)
 
         content_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/content/" + section.content_name)
@@ -493,9 +534,10 @@ def delete_student(student_id):
         relationships = CourseMembers.query.filter_by(student_id = student_id).all()
         califications = Calification.query.filter_by(student_id = student_id).all()
         for course in courses:
-            path = "courses/" + course.name + "/submitted/" + student.username
-            path_ = os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
-            shutil.rmtree(path_)
+            path_submitted = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/submitted/" + student.username)
+            path_feedback = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/feedback/" + student.username)
+            shutil.rmtree(path_submitted)
+            shutil.rmtree(path_feedback)
             manager = NbgraderManager(course.name)
             manager.remove_student(student.username)
             manager.closeDB()
@@ -534,7 +576,7 @@ def teacher_create_student():
                         relationship = CourseMembers(course_id = course.id, student_id = user.id)
                         db.session.add(relationship)
                         db.session.commit()
-                        make_dir_submissions(course.name, user.username)
+                        make_dir_submissions_feedback(course.name, user.username)
                         manager = NbgraderManager(course.name)
                         manager.add_student(user.username)
                         flash("Usuario creado correctamente")
@@ -563,7 +605,7 @@ def teacher_students_student(student):
         if request.method == 'POST':
             return redirect(url_for('delete_student', student_id = student.id))
         courses = get_student_courses(student.id)
-        califications = get_student_califications(student, courses)
+        califications = get_student_califications(student, courses, user)
         return render_template("teacher/student.html", user = user, student = student, califications = califications)
     else:
         flash("Acceso no permitido")
@@ -627,6 +669,7 @@ def student_course(course):
                         calification = Calification(student_id = user.id, section_id = section, task_name = task, value = score)
                         db.session.add(calification)
                         db.session.commit()
+                        manager.generate_feedback(task,user.username)
                         manager.closeDB()
                         path = os.path.join(os.path.abspath(os.path.dirname(__file__)),  "courses/" + course + "/autograded/" + user.username)
                         shutil.rmtree(path)
@@ -670,6 +713,14 @@ def download_submission(course, student, task_name):
     return send_from_directory(path, notebook, as_attachment=True)
 
 
+@app.route('/download_feedback/<string:course>/<string:student>/<string:task_name>')
+@login_required
+def download_feedback(course, student, task_name):
+    path = "courses/" + course + "/feedback/" + student + "/" + task_name
+    feedback_file = task_name + ".html"
+    return send_from_directory(path, feedback_file, as_attachment=True)
+
+
 @app.route('/student/course/<string:course>/<string:username>',methods=["GET"])
 @login_required
 def student_course_califications(course, username):
@@ -694,7 +745,7 @@ def student_califications():
     if check_access("student"):
         user = get_current_User(current_user.get_id())
         courses = get_student_courses(user.id)
-        califications = get_student_califications(user, courses)
+        califications = get_student_califications_(user, courses)
         return render_template("student/califications.html", user = user, califications = califications)
     else:
         flash("Acceso no permitido")
@@ -727,9 +778,23 @@ def get_course_sections(course):
         sections.append(section)
     return sections
 
-def get_student_califications(user, courses):
+# for student
+def get_student_califications_(user, courses):
     califications = []
     for course in courses:
+            sections = Section.query.filter_by(course_id = course.id).all()
+            for section in sections:
+                calification = Calification.query.filter_by(student_id=user.id, section_id=section.id).first()
+                if calification:
+                    tmp_list = [course.name, section.name,calification]
+                    califications.append(tmp_list)
+    return califications
+
+# for teacher
+def get_student_califications(user, courses, teacher):
+    califications = []
+    for course in courses:
+        if course.teacher_id == teacher.id:
             sections = Section.query.filter_by(course_id = course.id).all()
             for section in sections:
                 calification = Calification.query.filter_by(student_id=user.id, section_id=section.id).first()
@@ -781,15 +846,20 @@ def get_teacher_students(teacher_id):
     return alumnos
 
 
-def make_dir_submissions(course, username):
-    path = "courses/" + course + "/submitted/" + username
-    path_ = os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
-    os.mkdir(path_)
+def make_dir_submissions_feedback(course, username):
+
+    path_submitted = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course + "/submitted/" + username)
+    path_feedback = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course + "/feedback/" + username)
+    os.mkdir(path_submitted)
+    os.mkdir(path_feedback)
     course_ = Course.query.filter_by(name = course).first()
     sections = Section.query.filter_by(course_id = course_.id).all()
     for section in sections:
-        s_path = path_ + "/" + section.task_name
+        s_path = path_submitted + "/" + section.task_name
+        f_path = path_feedback + "/" + section.task_name
         os.mkdir(s_path)
+        os.mkdir(f_path)
+
 
 
 def get_teachers_califications(teacher_id):
@@ -807,10 +877,10 @@ def get_teachers_califications(teacher_id):
 
 
 def quick_from_course(course,student):
-
-        path = "courses/" + course.name + "/submitted/" + student.username
-        path_ = os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
-        shutil.rmtree(path_)
+        path_submitted = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/submitted/" + student.username)
+        path_feedback = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/feedback/" + student.username)
+        shutil.rmtree(path_submitted)
+        shutil.rmtree(path_feedback)
         manager = NbgraderManager(course.name)
         manager.remove_student(student.username)
         manager.closeDB()

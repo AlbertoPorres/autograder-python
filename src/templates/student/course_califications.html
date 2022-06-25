@@ -1,3 +1,9 @@
+<!-- Student's Course califications HTML file.
+
+    Author: Alberto Porres Fernández
+    Date: 07/07/2022
+
+-->
 {% extends "base_template.html" %}
 {% block title %}Studen Califications Page{% endblock %}
 {% block content %}
@@ -11,6 +17,7 @@
             <th>Tarea</th>
             <th>Calificacion</th>
             <th></th>
+            <th></th>
         </tr>
     {% for calification in califications %}
         <tr>
@@ -21,6 +28,11 @@
                 <a class="btn btn-outline-light" href="{{ url_for('download_submission', course=course.name, student=user.username, task_name=calification[1].task_name ) }}"
                  style="font-weight: 600;"> Descargar entrega</a> 
             </td>
+            <td>
+                <a class="btn btn-outline-light" href="{{ url_for('download_feedback', course=course.name, student=user.username, task_name=calification[1].task_name ) }}"
+                 style="font-weight: 600;"> Descargar feedback</a> 
+            </td>
+
         </tr>
     {% endfor %}
     </table>

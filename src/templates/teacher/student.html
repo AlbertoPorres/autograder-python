@@ -1,3 +1,9 @@
+<!-- Teacher's student page HTML file.
+
+    Author: Alberto Porres Fernández
+    Date: 07/07/2022
+
+-->
 {% extends "base_template.html" %}
 {% block title %}Teacher Students student{% endblock %}
 {% block content %}
@@ -12,6 +18,8 @@
             <th>Tarea</th>
             <th>Calificacion</th>
             <th></th>
+            <th></th>
+            <th></th>
         </tr>
     {% for calification in califications %}
         <tr>
@@ -23,9 +31,42 @@
                 <a class="btn btn-outline-light" href="{{ url_for('download_submission', course=calification[0] , student=student.username, task_name=calification[2].task_name ) }}"
                  style="font-weight: 600;"> Descargar entrega</a> 
             </td>
+            <td>
+                <a class="btn btn-outline-light" href="{{ url_for('download_feedback', course=calification[0] , student=student.username, task_name=calification[2].task_name ) }}"
+                 style="font-weight: 600;"> Descargar feedback</a> 
+            </td>
+            <td>
+                <a class="btn btn-outline-danger" href="#" data-toggle="modal" data-target="#confirm-{{ calification[2].student_id }}-{{ calification[2].section_id }}"
+                 style="font-weight: 600;"> Eliminar entrega</a> 
+            </td>
         </tr>
     {% endfor %}
     </table>
+
+     <!-- Modals -->
+
+     {% for calification in califications %}
+     <div class="modal fade" id="confirm-{{ calification[2].student_id }}-{{ calification[2].section_id }}" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+         <div class="modal-dialog" role="document">
+             <div class="modal-content">
+                 <div class="modal-header">
+                     <h5 class="modal-title" id="confirmModalLabel">¿Desea realizar esta acción?</h5>
+                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                         <span aria-hidden="true">&times;</span>
+                     </button>
+                 </div>
+     
+                 <div class="modal-footer">
+                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                     <a class="btn btn-outline-success" 
+                     href="{{ url_for('teacher_delete_submission', course =calification[0] ,student = student.username,task_name = calification[2].task_name ) }}">Confirmar</a>
+                 </div>
+             </div>
+         </div>
+     </div>
+     {% endfor %}
+
+     
     {% else %}
     <h1 class = "jumbotron-heading" style="font-size: 2em;
     font-weight: 600;">{{ student.name }} todavía no ha realizado ninguna entrega!</h1><br>
@@ -35,7 +76,9 @@
         <button type="button" class="btn btn-dark" data-toggle="modal" data-target="#deleteModal">ELIMINAR ALUMNO</button>
     </form>
 
-    <!-- Modal -->
+   
+
+
 <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">

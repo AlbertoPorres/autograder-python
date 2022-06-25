@@ -1,3 +1,9 @@
+<!-- Teacher's Califications HTML file.
+
+    Author: Alberto Porres Fernández
+    Date: 07/07/2022
+
+-->
 {% extends "base_template.html" %}
 {% block title %}Teacher Califications Page{% endblock %}
 {% block content %}
@@ -15,6 +21,8 @@
             <th> Tarea </th>
             <th> Calificación </th>
             <th></th>
+            <th></th>
+
 
         </tr>
         </thead>
@@ -32,6 +40,11 @@
                  style="font-weight: 600;"> Descargar entrega</a> 
             </td>
 
+            <td>
+                <a class="btn btn-outline-light" href="{{ url_for('download_feedback', course=calification[0] , student=calification[3], task_name=calification[4] ) }}"
+                 style="font-weight: 600;"> Descargar feedback</a> 
+            </td>
+
         </tr>
 
     {% endfor %}
@@ -41,7 +54,5 @@
     {% endif %}
     </tbody>
     </table>
-
-
 
 {% endblock %}  
