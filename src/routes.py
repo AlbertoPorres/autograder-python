@@ -16,6 +16,7 @@ from src import app, db
 import os
 import shutil
 
+
 # KEEP JUPYTER NOTEBOOK RUNNING
 os.system("pkill -f -1 jupyter*")
 os.system("jupyter notebook --ip='0.0.0.0' --no-browser --allow-root --port=8888 --notebook-dir=src/courses&")
