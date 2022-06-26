@@ -1,3 +1,5 @@
+""" Flask Project app.py module
+"""
 from src import app   
 
 if __name__ =="__main__":

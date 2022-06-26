@@ -27,15 +27,24 @@ login_manager.login_view = "login"
 
 @login_manager.user_loader
 def load_user(user_id):
+    """ Loads the current user getter for the login manager.
+
+        Parameters:
+            - user_id: (int) user's id 
+    """
     return User.query.get(int(user_id))
 
 # ROUTES
 @app.route('/',methods=["GET"])
 def index():
+    """ Website's langing enpoint.            
+    """
     return render_template("index.html")
 
 @app.route('/login',methods=["GET", "POST"])
 def login():
+    """ Website's login enpoint.            
+    """
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -55,15 +64,47 @@ def login():
 @app.route('/logout',methods=["GET", "POST"])
 @login_required
 def logout():
+    """ Website's logout enpoint.            
+    """
     user = get_current_User(current_user.get_id())
     if user.is_teacher:
         os.system("pkill -f -1 jupyter*")
     logout_user()
     return redirect(url_for('login'))
 
+
+
+@app.route('/change_password',methods=["GET", "POST"])
+@login_required
+def change_password():
+    """ Website's password changing enpoint.            
+    """
+    form = ChagePasswordForm()
+    user = get_current_User(current_user.get_id())
+    if form.validate_on_submit():
+        password = form.current_password.data
+        new_password_1 = form.new_password_1.data
+        new_password_2 = form.new_password_2.data
+        if user.verify_password(password):
+            if new_password_1 == new_password_2:
+                if new_password_1 != password:
+                    user.change_password(new_password_1)
+                    user.first_login = False
+                    db.session.commit()
+                    return redirect(url_for('logout'))
+                flash("La nueva contraseña no puede ser la misma que la actual")
+                return redirect(url_for('change_password'))
+            flash("Las contraseñas han de coincidir")
+            return redirect(url_for('change_password'))
+        flash("Contraseña incorrecta")
+        redirect(url_for('change_password'))
+    return render_template("change_password.html", user = user, form = form)
+
 @app.route('/teacher',methods=["GET"])
 @login_required
 def teacher():
+    """ Teacher's main page enpoint.            
+    """
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         return render_template("teacher.html", user = user)
@@ -71,37 +112,11 @@ def teacher():
         flash("Acceso no permitido")
         return redirect(url_for('student'))
 
-
-@app.route('/change_password',methods=["GET", "POST"])
-@login_required
-def change_password():
-    
-        form = ChagePasswordForm()
-        user = get_current_User(current_user.get_id())
-        if form.validate_on_submit():
-            password = form.current_password.data
-            new_password_1 = form.new_password_1.data
-            new_password_2 = form.new_password_2.data
-            if user.verify_password(password):
-                if new_password_1 == new_password_2:
-                    if new_password_1 != password:
-                        user.change_password(new_password_1)
-                        user.first_login = False
-                        db.session.commit()
-                        return redirect(url_for('logout'))
-                    flash("La nueva contraseña no puede ser la misma que la actual")
-                    return redirect(url_for('change_password'))
-                flash("Las contraseñas han de coincidir")
-                return redirect(url_for('change_password'))
-            flash("Contraseña incorrecta")
-            redirect(url_for('change_password'))
-        return render_template("change_password.html", user = user, form = form)
-
-
-
 @app.route('/teacher/courses',methods=["GET"])
 @login_required
 def teacher_courses():
+    """ Teacher's courses page enpoint.            
+    """
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         courses = Course.query.filter_by(teacher_id = user.id).all()
@@ -113,6 +128,11 @@ def teacher_courses():
 @app.route('/teacher/courses/<string:course>',methods=["GET"])
 @login_required
 def teacher_courses_course(course):
+    """ Teacher's individual course page enpoint.   
+
+        Parameters:
+            - course: (string) course's name          
+    """
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         course = Course.query.filter_by(name = course).first()
@@ -125,6 +145,11 @@ def teacher_courses_course(course):
 @app.route('/teacher/courses/<string:course>/students',methods=["GET"])
 @login_required
 def teacher_course_students(course):
+    """ Teacher's course students page enpoint.  
+
+        Parameters:
+            - course: (string) course's name             
+    """
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         course = Course.query.filter_by(name = course).first()
@@ -151,6 +176,13 @@ def teacher_course_students(course):
 @app.route('/teacher/delete_submission/<string:course>/<string:student>/<string:task_name>',methods=["GET"])
 @login_required
 def teacher_delete_submission(course,student,task_name):
+    """ Teacher's submission deletation enpoint.        
+    
+        Parameters:
+            - course: (string) course's name   
+            - student: (string) student's name 
+            - task_name: (string) task's name 
+    """
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         course = Course.query.filter_by(name = course).first()
@@ -179,6 +211,12 @@ def teacher_delete_submission(course,student,task_name):
 @app.route('/teacher/quick/<string:course>/<string:student>',methods=["GET"])
 @login_required
 def teacher_quick_student(course,student):
+    """ Teacher's quick student from course enpoint.        
+    
+        Parameters:
+            - course: (string) course's name   
+            - student: (string) student's name 
+    """
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         course = Course.query.filter_by(name = course).first()
@@ -198,6 +236,12 @@ def teacher_quick_student(course,student):
 @app.route('/teacher/enrroll/<string:course>/<string:student>',methods=["GET"])
 @login_required
 def teacher_enrroll_student(course,student):
+    """ Teacher's enrroll student in course enpoint.
+
+        Parameters:
+            - course: (string) course's name   
+            - student: (string) student's name             
+    """
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         course = Course.query.filter_by(name = course).first()
@@ -225,6 +269,8 @@ def teacher_enrroll_student(course,student):
 @app.route('/teacher/create_course',methods=["GET", "POST"])
 @login_required
 def teacher_create_course():
+    """ Teacher's course creation enpoint.            
+    """
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         form = CreateCourseForm()
@@ -257,6 +303,11 @@ def teacher_create_course():
 @app.route('/teacher/<string:course>/create_section',methods=["GET", "POST"])
 @login_required
 def teacher_create_section(course):
+    """ Teacher's section creation in course enpoint.    
+        
+        Parameters:
+            - course: (string) course's name 
+    """
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         course = Course.query.filter_by(name = course).first()
@@ -293,8 +344,6 @@ def teacher_create_section(course):
                     db.session.commit()
                     shutil.rmtree(os.path.join(os.path.abspath(os.path.dirname(__file__)),source_path))
                     return render_template("teacher/create_section.html",  user = user)
-
-                
                 content_path = "courses/" + course.name + "/content"
                 content_file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),content_path ,content_file.filename))
                 manager.closeDB()
@@ -320,6 +369,11 @@ def teacher_create_section(course):
 @app.route('/teacher/<string:course>/create_unreleased_section',methods=["GET", "POST"])
 @login_required
 def teacher_create_unreleased_section(course):
+    """ Teacher's unreleased section creation in course enpoint.    
+        
+        Parameters:
+            - course: (string) course's name 
+    """
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         course = Course.query.filter_by(name = course).first()
@@ -366,6 +420,11 @@ def teacher_create_unreleased_section(course):
 @app.route('/teacher/<string:course>/unreleased_sections',methods=["GET"])
 @login_required
 def teacher_unreleased_sections(course):
+    """ Teacher's unreleased sections page enpoint.    
+        
+        Parameters:
+            - course: (string) course's name 
+    """
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         course = Course.query.filter_by(name = course).first()
@@ -379,6 +438,12 @@ def teacher_unreleased_sections(course):
 @app.route('/publish_section/<string:course>/<string:section>',methods=["GET"])
 @login_required
 def publish_section(course, section):
+    """ Teacher's publish unreleased sections enpoint.    
+        
+        Parameters:
+            - course: (string) course's name 
+            - section: (string) section's name 
+    """
     if check_access("teacher"):
         course = Course.query.filter_by(name = course).first()
         user = get_current_User(current_user.get_id())
@@ -411,6 +476,12 @@ def publish_section(course, section):
 @app.route('/cancel_section/<string:course>/<string:section>',methods=["GET"])
 @login_required
 def cancel_section(course, section):
+    """ Teacher's cancel unreleased sections enpoint.    
+        
+        Parameters:
+            - course: (string) course's name 
+            - section: (string) section's name 
+    """
     if check_access("teacher"):
         course = Course.query.filter_by(name = course).first()
         user = get_current_User(current_user.get_id())
@@ -433,6 +504,11 @@ def cancel_section(course, section):
 @app.route('/delete_course/<string:course_name>',methods=["GET"])
 @login_required
 def delete_course(course_name):
+    """ Teacher's course deletation enpoint.    
+        
+        Parameters:
+            - course_name: (string) course's name 
+    """
     if check_access("teacher"):
         course = Course.query.filter_by(name = course_name).first()
         user = get_current_User(current_user.get_id())
@@ -465,6 +541,12 @@ def delete_course(course_name):
 @app.route('/delete_section/<string:course_name>/<string:section_name>',methods=["GET"])
 @login_required
 def delete_section(course_name,section_name):
+    """ Teacher's section deletation from course enpoint.    
+        
+        Parameters:
+            - course_name: (string) course's name 
+            - section_name: (string) section's name
+    """
     if check_access("teacher"):
         section = Section.query.filter_by(name = section_name).first()
         course = Course.query.filter_by(name = course_name).first()
@@ -505,6 +587,8 @@ def delete_section(course_name,section_name):
 @app.route('/teacher/califications',methods=["GET"])
 @login_required
 def teacher_califications():
+    """ Teacher's califications page enpoint. 
+    """    
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         califications = get_teachers_califications(user.id)
@@ -516,6 +600,8 @@ def teacher_califications():
 @app.route('/teacher/students',methods=["GET"])
 @login_required
 def teacher_students():
+    """ Teacher's students page enpoint. 
+    """  
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         enrrolled = get_teacher_students(user.id)
@@ -528,6 +614,11 @@ def teacher_students():
 @app.route('/delete_student/<string:student_id>')
 @login_required
 def delete_student(student_id):
+    """ Teacher's student delatation page enpoint. 
+
+        Parameters:
+            - student_id: (int) student's id
+    """  
     if check_access("teacher"):
         student = User.query.filter_by(id = student_id).first()
         courses = get_student_courses(student_id)
@@ -557,6 +648,8 @@ def delete_student(student_id):
 @app.route('/teacher/create_student',methods=["GET","POST"])
 @login_required
 def teacher_create_student():
+    """ Teacher's student creation page enpoint. 
+    """  
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         form = CreateStudentForm()
@@ -597,6 +690,11 @@ def teacher_create_student():
 @app.route('/teacher/students/<string:student>',methods=["GET", "POST"])
 @login_required
 def teacher_students_student(student):
+    """ Teacher's single student page enpoint. 
+
+        Parameters:
+            - student: (string) student's name
+    """  
     if check_access("teacher"):
         user = get_current_User(current_user.get_id())
         student = User.query.filter_by(username = student).first()
@@ -616,6 +714,8 @@ def teacher_students_student(student):
 @app.route('/student',methods=["GET"])
 @login_required
 def student():
+    """ Student's main page enpoint.            
+    """
     if check_access("student"):
         user = get_current_User(current_user.get_id())
         return render_template("student.html",  user = user)
@@ -627,6 +727,8 @@ def student():
 @app.route('/student/courses',methods=["GET"])
 @login_required
 def student_courses():
+    """ Student's courses page enpoint.            
+    """
     if check_access("student"):
         user = get_current_User(current_user.get_id())
         return render_template("student/courses.html",  user = user, courses = get_student_courses(user.id))
@@ -639,6 +741,11 @@ def student_courses():
 @app.route('/student/courses/<string:course>',methods=["GET", "POST"])
 @login_required
 def student_course(course):
+    """ Student's course content page enpoint.    
+
+        Parameters:
+            - course: (string) course's name
+    """
     if check_access("student"):
         user = get_current_User(current_user.get_id())
         current_course = Course.query.filter_by(name = course).first()
@@ -681,49 +788,15 @@ def student_course(course):
         return redirect(url_for('teacher'))
 
 
-
-@app.route('/download_content/<string:course>/<string:filename>')
-@login_required
-def download_content(course,filename):
-    path = "courses/" + course + "/content"
-    return send_from_directory(path, filename, as_attachment=True)
-
-
-@app.route('/download_task/<string:course>/<string:filename>')
-@login_required
-def download_task(course,filename):
-    path = "courses/" + course + "/release/" + filename
-    notebook = filename + ".ipynb"
-    return send_from_directory(path, notebook, as_attachment=True)
-
-
-@app.route('/download_source/<string:course>/<string:filename>')
-@login_required
-def download_source(course,filename):
-    path = "courses/" + course + "/source/" + filename
-    notebook = filename + ".ipynb"
-    return send_from_directory(path, notebook, as_attachment=True)
-
-
-@app.route('/download_submission/<string:course>/<string:student>/<string:task_name>')
-@login_required
-def download_submission(course, student, task_name):
-    path = "courses/" + course + "/submitted/" + student + "/" + task_name
-    notebook = task_name + ".ipynb"
-    return send_from_directory(path, notebook, as_attachment=True)
-
-
-@app.route('/download_feedback/<string:course>/<string:student>/<string:task_name>')
-@login_required
-def download_feedback(course, student, task_name):
-    path = "courses/" + course + "/feedback/" + student + "/" + task_name
-    feedback_file = task_name + ".html"
-    return send_from_directory(path, feedback_file, as_attachment=True)
-
-
 @app.route('/student/course/<string:course>/<string:username>',methods=["GET"])
 @login_required
 def student_course_califications(course, username):
+    """ Student's course califications page enpoint.    
+
+        Parameters:
+            - course: (string) course's name
+            - username: (string) student's username
+    """
     if check_access("student"):
         current_course = Course.query.filter_by(name = course).first()
         user = get_current_User(current_user.get_id())
@@ -742,6 +815,8 @@ def student_course_califications(course, username):
 @app.route('/student/califications',methods=["GET"])
 @login_required
 def student_califications():
+    """ Student's califications page enpoint.
+    """
     if check_access("student"):
         user = get_current_User(current_user.get_id())
         courses = get_student_courses(user.id)
@@ -752,16 +827,95 @@ def student_califications():
         return redirect(url_for('teacher'))
 
 
+@app.route('/download_content/<string:course>/<string:filename>')
+@login_required
+def download_content(course,filename):
+    """ Course section content downloader endpoint.
+
+        Parameters:
+            - course: (string) course's name
+            - filename: (string) file name
+    """
+    path = "courses/" + course + "/content"
+    return send_from_directory(path, filename, as_attachment=True)
 
 
-# METODOS ADICIONALES DE FUNCIONAMIENTO
+@app.route('/download_task/<string:course>/<string:filename>')
+@login_required
+def download_task(course,filename):
+    """ Course section task downloader endpoint.
+
+        Parameters:
+            - course: (string) course's name
+            - filename: (string) file name
+    """
+    path = "courses/" + course + "/release/" + filename
+    notebook = filename + ".ipynb"
+    return send_from_directory(path, notebook, as_attachment=True)
+
+
+@app.route('/download_source/<string:course>/<string:filename>')
+@login_required
+def download_source(course,filename):
+    """ Course task source version downloader endpoint.
+
+        Parameters:
+            - course: (string) course's name
+            - filename: (string) file name
+    """
+    path = "courses/" + course + "/source/" + filename
+    notebook = filename + ".ipynb"
+    return send_from_directory(path, notebook, as_attachment=True)
+
+
+@app.route('/download_submission/<string:course>/<string:student>/<string:task_name>')
+@login_required
+def download_submission(course, student, task_name):
+    """ Course submission downloader endpoint.
+
+        Parameters:
+            - course: (string) course's name
+            - student: (string) student's name
+            - task_name: (string) task bame
+    """
+    path = "courses/" + course + "/submitted/" + student + "/" + task_name
+    notebook = task_name + ".ipynb"
+    return send_from_directory(path, notebook, as_attachment=True)
+
+
+@app.route('/download_feedback/<string:course>/<string:student>/<string:task_name>')
+@login_required
+def download_feedback(course, student, task_name):
+    """ Course feedback downloader endpoint.
+
+        Parameters:
+            - course: (string) course's name
+            - student: (string) student's name
+            - task_name: (string) task bame
+    """
+    path = "courses/" + course + "/feedback/" + student + "/" + task_name
+    feedback_file = task_name + ".html"
+    return send_from_directory(path, feedback_file, as_attachment=True)
+
+
+
+# Aditional methods
 
 def get_current_User(id):
+    """ Session's current user getter.
+
+        Parameters:
+            - id: (int) user's id
+    """
     return User.query.filter_by(id=id).first() 
 
 
-# LISTA DE TODOS LOS CURSOS DE UN ALUMNO
 def get_student_courses(student_id):
+    """ Gets all the courses a student is enrrolled in.
+
+        Parameters:
+            - student_id: (int) student's id
+    """
     courses = []
     relationships = CourseMembers.query.filter_by(student_id = student_id).all()
     for relationship in relationships:
@@ -769,9 +923,19 @@ def get_student_courses(student_id):
     return courses
 
 def get_teacher_courses(teacher_id):
+    """ Gets all the teacher's courses.
+
+        Parameters:
+            - teacher_id: (int) teacher's id
+    """
     return Course.query.filter_by(teacher_id = teacher_id).all()
 
 def get_course_sections(course):
+    """ Gets the course's sections.
+
+        Parameters:
+            - course: (Course) course itself
+    """
     sections = []
     sections_ = Section.query.filter_by(course_id = course.id).all()
     for section in sections_:
@@ -780,6 +944,12 @@ def get_course_sections(course):
 
 # for student
 def get_student_califications_(user, courses):
+    """ Gets all student's califications for the student.
+
+        Parameters:
+            - user: (User) the user/student itself
+            - courses: (List) list of all the student's courses
+    """
     califications = []
     for course in courses:
             sections = Section.query.filter_by(course_id = course.id).all()
@@ -792,6 +962,13 @@ def get_student_califications_(user, courses):
 
 # for teacher
 def get_student_califications(user, courses, teacher):
+    """ Gets student's califications in the teacher's courses for the teacher.
+
+        Parameters:
+            - user: (User) the user/student itself
+            - courses: (List) list of all the student's courses
+            - teacher: (User) the teacher requesting the student's califications
+    """
     califications = []
     for course in courses:
         if course.teacher_id == teacher.id:
@@ -806,6 +983,12 @@ def get_student_califications(user, courses, teacher):
 
 
 def get_sections_data(course_id, student_id):
+    """ Gets sections information for the student view of a course.
+
+        Parameters:
+            - course_id: (int) course's id
+            - student_id: (int) student's id
+    """
     sections = Section.query.filter_by(course_id =course_id).all()
     califications = Calification.query.filter_by(student_id = student_id).all()
     sections_data = []
@@ -821,6 +1004,11 @@ def get_sections_data(course_id, student_id):
 
 
 def check_access(user_type):
+    """Checks the access for a student or teacher.
+
+        Parameters:
+            - user_type: (string) user type.
+    """
     user = get_current_User(current_user.get_id())
     if user_type == "teacher":
         if user.is_teacher:
@@ -834,6 +1022,11 @@ def check_access(user_type):
             return False
     
 def get_teacher_students(teacher_id):
+    """Gets the students enrrolled in the teacher's courses.
+
+        Parameters:
+            - teacher_id: (int) teacher's id.
+    """
     courses = get_teacher_courses(teacher_id)
     relationships = []
     alumnos = []
@@ -847,7 +1040,12 @@ def get_teacher_students(teacher_id):
 
 
 def make_dir_submissions_feedback(course, username):
+    """Makes de submissions and feedbacks files for a student in a course.
 
+        Parameters:
+            - course: (string) course name.
+            - username: (string) student username.
+    """
     path_submitted = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course + "/submitted/" + username)
     path_feedback = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course + "/feedback/" + username)
     os.mkdir(path_submitted)
@@ -863,6 +1061,11 @@ def make_dir_submissions_feedback(course, username):
 
 
 def get_teachers_califications(teacher_id):
+    """Gets the califications for all the students enrrolled in the teacher's courses.
+
+        Parameters:
+            - teacher_id: (int) teacher's id.
+    """
     courses = Course.query.filter_by(teacher_id = teacher_id).all()
     final_califications = []
     for course in courses:
@@ -877,23 +1080,27 @@ def get_teachers_califications(teacher_id):
 
 
 def quick_from_course(course,student):
-        path_submitted = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/submitted/" + student.username)
-        path_feedback = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/feedback/" + student.username)
-        shutil.rmtree(path_submitted)
-        shutil.rmtree(path_feedback)
-        manager = NbgraderManager(course.name)
-        manager.remove_student(student.username)
-        manager.closeDB()
+    """Removes directories for a student removal from a course.
 
-        relation = CourseMembers.query.filter_by(course_id = course.id, student_id = student.id).first()
-        
-        db.session.delete(relation)
-        sections = get_course_sections(course)
-        for section in sections:
-            calification = Calification.query.filter_by(student_id = student.id, section_id = section.id).first()
-            if calification:
-                db.session.delete(calification)
-        db.session.commit()
+        Parameters:
+            - course: (string) course name.
+            - username: (string) student username.
+    """
+    path_submitted = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/submitted/" + student.username)
+    path_feedback = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/feedback/" + student.username)
+    shutil.rmtree(path_submitted)
+    shutil.rmtree(path_feedback)
+    manager = NbgraderManager(course.name)
+    manager.remove_student(student.username)
+    manager.closeDB()
+    relation = CourseMembers.query.filter_by(course_id = course.id, student_id = student.id).first()
+    db.session.delete(relation)
+    sections = get_course_sections(course)
+    for section in sections:
+        calification = Calification.query.filter_by(student_id = student.id, section_id = section.id).first()
+        if calification:
+            db.session.delete(calification)
+    db.session.commit()
 
 
         
