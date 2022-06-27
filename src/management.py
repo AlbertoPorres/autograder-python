@@ -138,6 +138,15 @@ class NbgraderManager:
         """
         self.api.generate_feedback(task,student)
 
+    def remove_assigment(self,task):
+        """ Removes an assigment from the DB.
+
+        Parameters:
+            - task: (string) tasks's name
+        """
+        self.dbConnection.remove_assignment(task))
+
+
     def closeDB(self):
         """ Closes the database connection.
 

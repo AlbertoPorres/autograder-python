@@ -571,6 +571,7 @@ def delete_section(course_name,section_name):
             shutil.rmtree(path_feedback)
             manager.remove_submission(section.task_name, student.username)
 
+        manager.remove_assigment(section.task_name)
         content_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/content/" + section.content_name)
         os.remove(content_path)
         source_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "courses/" + course.name + "/source/" + section.task_name)
