@@ -144,7 +144,7 @@ class NbgraderManager:
         Parameters:
             - task: (string) tasks's name
         """
-        self.dbConnection.remove_assignment(task))
+        self.dbConnection.remove_assignment(task)
 
 
     def closeDB(self):
