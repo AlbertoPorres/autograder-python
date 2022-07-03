@@ -46,11 +46,11 @@
     {% endif %}
 
     <a class="btn btn-primary" href="{{ url_for('teacher_create_section', course = course.name) }}"
-     style="margin-left: 2%; margin-right: 4%; padding: 10px; font-weight: 600;"> Crear sección de forma directa</a> 
+     style="margin-left: 2%; margin-right: 4%; padding: 10px; font-weight: 600;"> Crear sección</a> 
     <a class="btn btn-primary" href="{{ url_for('teacher_create_unreleased_section', course = course.name) }}" 
-    style="margin-left: 2%; margin-right: 3%; padding: 10px; font-weight: 600;"> Crear sección con tarea creada manualmente</a> 
+    style="margin-left: 2%; margin-right: 3%; padding: 10px; font-weight: 600;"> Crear sección no publicada</a> 
     <a class="btn btn-primary" href="{{ url_for('teacher_unreleased_sections', course = course.name) }}" 
-    style=" margin-left: 2%; margin-right: 2%; padding: 10px; font-weight: 600;" > Ir a las secciones sin publicar</a> 
+    style=" margin-left: 2%; margin-right: 2%; padding: 10px; font-weight: 600;" > Ir a las secciones no publicadas</a> 
     <br><br><br>
 
     {% for section in sections %}
