@@ -15,8 +15,6 @@ RUN pip3 --no-cache-dir install -r requirements.txt
 RUN jupyter nbextension install --sys-prefix --py nbgrader --overwrite
 RUN jupyter nbextension enable --sys-prefix --py nbgrader
 RUN jupyter serverextension enable --sys-prefix --py nbgrader
-
-
-
+COPY jupyter_notebook_config.py /root/.jupyter/jupyter_notebook_config.py
 
 

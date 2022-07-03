@@ -57,7 +57,7 @@ class NbgraderManager:
 
 
     def grade(self, task, student):
-        """ Removes a student from the Nbgrader database.
+        """ Grades a task.
 
         Parameters:
             - task: (string) tasks's name
@@ -110,11 +110,10 @@ class NbgraderManager:
         
 
     def create_assigment(self, task):
-        """ Checks if a task has been submitted by a student or not.
+        """ Creates an assigment for the students.
 
         Parameters:
             - task: (string) tasks's name
-            - student: (string) student's username
         
         Returns:
             - True 

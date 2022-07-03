@@ -18,8 +18,10 @@ import shutil
 
 
 # KEEP JUPYTER NOTEBOOK RUNNING
+# kill any jupyter current instance
 os.system("pkill -f -1 jupyter*")
-os.system("jupyter notebook --ip='0.0.0.0' --no-browser --allow-root --port=8888 --notebook-dir=src/courses&")
+# run jupyter
+os.system("jupyter notebook --ip='0.0.0.0' --no-browser --allow-root --port=8888 --notebook-dir=src/courses &")
 
 #Login manager
 login_manager = LoginManager()
@@ -68,8 +70,6 @@ def logout():
     """ Website's logout enpoint.            
     """
     user = get_current_User(current_user.get_id())
-    if user.is_teacher:
-        os.system("pkill -f -1 jupyter*")
     logout_user()
     return redirect(url_for('login'))
 
