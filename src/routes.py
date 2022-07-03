@@ -525,6 +525,9 @@ def delete_course(course_name):
             for calification in califications:
                 db.session.delete(calification)
             db.session.delete(section)
+        unreleased_sections = UnreleasedSection.query.filter_by(course_id = course.id).all()
+        for unreleased in unreleased_sections:
+            db.session.delete(unreleased)
         relationships = CourseMembers.query.filter_by(course_id = course.id).all()
         for relation in relationships:
             db.session.delete(relation)
