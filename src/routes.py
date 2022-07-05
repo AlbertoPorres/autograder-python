@@ -774,7 +774,7 @@ def student_course(course):
                         file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)),path ,file.filename))
                         manager = NbgraderManager(course)
                         score = manager.grade(task,user.username)
-                        if not score:
+                        if score is False:
                             flash("Hay algo erroneo en su archivo de entrega")
                             os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)),path + "/" + file.filename))
                             return render_template("student/course.html", course = current_course,  user = user, sections = sections)
