@@ -1,0 +1,110 @@
+\capitulo{4}{Técnicas y herramientas}
+
+Esta parte de la memoria tiene como objetivo presentar las técnicas metodológicas y las herramientas de desarrollo que se han utilizado para llevar a cabo el proyecto.
+
+\section{Metodología de desarrollo: Agile}
+
+El desarrollo de este proyecto se ha llevado a cabo siguiendo la Métodología Agile\cite{MetodologiaAgile} derivada del manifiesto Agile\cite{ManifiestoAgile}. Esta metodología de diseño software busca un desarrollo de proyectos que precisan rapidez y flexibilidad, proponiendo una filosofía de trabajo y organización diferente a los métodos tradicionales en la que el proyecto es dividido en pequeñas tareas que han de ser completadas en marcas de tiempo predefinidas. Estos periodos de tiempo son denominados Sprints y, en el caso de este proyecto, cada sprint ha tenido una duración de 14 días.
+
+\section{Control de versiones: GitHub}
+
+Se denomina control de versiones a la técnica de gestión de los cambios que un producto o proyecto sufre a lo largo de todo su desarrollo. En el caso de este proyecto se ha utilizado la herramienta GitHub \cite{tool:GitHub}, la cual es una plataforma de desarrollo colaborativo para alojar proyectos mediante el sofwate de control de versiones Git.
+
+Puede consultarse el repositorio correspondiente a este proyecto en la URL \url{https://github.com/AlbertoPorres/autograder-python}.
+
+\section{Gestión y seguimiento de tareas: ZenHub}
+
+ZenHub\cite{tool:ZenHub} es una extensión de la herramienta de control de versiones GitHub que ofrece un manejo agile de los proyectos, con el fin de ayudar a los equipos de desarrollo con la organización de tareas y flujo de trabajo.
+
+
+\section{Servidor / Back-End}
+
+\subsection{Python}
+Python\cite{tool:Python} es un lenguaje de programación de alto nivel, interpretado, flexible, orientado a objetos y caracterizado por su fácil comprensión y aprendizaje. Python es un lenguaje de uso general por lo que ofrece una gran cantidad de usos como la creación de aplicaciones web, scripts, automatización de procesos y la creación de módulos de aprendizaje automático.
+
+\subsection{Nbgrader}
+Nbgrader\cite{tool:Nbgrader} es una librería de Python que facilita la creación y calificación de tareas en notebooks de Jupyter. Permite a los instructores crear fácilmente tareas basadas en el notebook que incluyen tanto ejercicios de codificación como respuestas libres escritas. Nbgrader también proporciona una interfaz optimizada para calificar rápidamente las tareas completadas.
+
+En este proyecto y, una vez consideradas diversas herramientas de autocorrección de ejercicios, se tomó la decisión de utilizar Nbgrader como autograder dentro del proyecto. Esto es debido a la sencilla e intuitiva usabilidad que ofrece y a la ausencia de problemas en los procesos de instalación y ejecución que otras herramientas consideradas inicialmente sí presentaban.
+
+Su implementación en el Back-End ha consistido en el uso de su API para las labores de calificación automática y generación de tareas corregibles automáticamente.
+
+\subsection{Flask}
+Flask\cite{tool:Flask} es un microframework de desarrollo de aplicaciones web escrito en Python y basado en el patrón arquitectural Modelo - Vista - Controlador. Este está diseñado con el objetivo de hacer del desarrollo de aplicaciones web una tarea rápida y sencilla pese a la complejidad del objetivo buscado.
+
+Flask está basado en el motor de templates Jinja y en la especificación WSGI de Werkzeug.
+
+
+\subsection{Flask-Login}
+Flask-Login\cite{tool:FlaskLogin} es una extensión de Flask orientada al manejo de usuarios de sesión. Esta se encarga de los procesos de loggin in, loggin out y recuerdo del usuario de la sesión actual sobre largos periodos de tiempo. Además, ofrece restricción de acceso y seguridad frente a robos de sesión.
+
+\subsection{Flask-SQLAlchemy}
+Flask-SQLAlchemy\cite{tool:Flask-SQLAlchemy} es una extensión de Flask que añade soporte para SQLAlchemy (librería de herramientas SQL de Python). Esta busca simplificar el uso de SQLAlchemy\cite{tool:SQLAlchemy} dentro de nuestro proyecto proporcionando defaults útiles junto con ayudas adicionales para lograr tareas comunes.
+
+\subsection{SQLite}
+SQLite\cite{tool:SQLite} es una librería de C la cual implementa un motor de bases de datos SQL.
+
+En el caso de este proyecto, el manejo de SQLite se ha realizado a través de la herramienta Flask-SQLAlchemy descrita en la sección anterior.
+
+\subsection{Flask-Migrate}
+Flask-Migrate\cite{tool:Flask-Migrate} es una extensión de Flask encargada del manejo de migraciones de bases de datos SQLAlchemy para aplicaciones Flask mediante el uso de Alembic.
+
+\subsection{WTForms}
+WTForms\cite{tool:WTForms}\cite{tool:Flask-WTForms}   es una librería de Python dedicada a la validación y renderizado de formularios web de forma flexible. Esta es funcional para cualquier framework web y motor de templates disponible y ofrece diversas funcionalidades como la validación, protección e internacionaliación de formularios.
+
+\subsection{Virtualenv}
+Virtualenv\cite{tool:Virtualenv} es una herramienta dedicada a la creación de entornos de Python aislados mediante la instalación de todos los paquetes necesarios para el funcionamiento de un sistema en un directorio.
+
+\subsection{Docker}
+Docker\cite{tool:Docker} es una plataforma software dedicada a la implementación de aplicaciones mediante el empaquetamiento software en unidades estandarizadas denominadas contenedores, las cuales incluyen todas las dependencias que estas necesitan para su correcto funcionamiento. Gracias a docker es posible la implementación de aplicaciones de forma rápida en cualquier entorno con la certeza de que esta funcionará.
+
+\subsection{AWS - EC2}
+Amazon Web Service\cite{tool:AWS} es de proveedor de servicios en la nube desarrollado por la multinacional Amazon. Este cuenta con una gran diversidad de servicios entre los que se encuentran la gestión de instancias e imágenes virtuales, el desarrollo de apps móviles o el almacenamiento de objetos escalable. Su servicio de instancias EC2 (Elastic Compute Cloud) permite a desarrolladores el alquiler de maquinas virtuales para el despliegue de aplicaciones web sobre estas.
+
+\section{Cliente / Front-End}
+
+\subsection{HTML}
+HyperText Markup Language o HTML\cite{tool:HTML} es el lenguaje utilizado para definir y desplegar los contenidos de una página web de forma estructurada. Este está formado por una serie de elementos denominados etiquetas, las cuales representan los contenidos de una determinada manera.
+
+\subsection{CSS}
+Las hojas de estilo en cascada o CSS\cite{tool:CSS} es el lenguaje de estilos empleado para definir y crear la representación gráfica de documentos escritos en lenguaje HTML.
+
+\subsection{JavaScript}
+JS\cite{tool:JavaScript} es un lenguaje de programación interpretado utilizado para implementar funciones en páginas web con el objetivo de crear contenido dinámico dentro de una página.
+
+\subsection{Bootstrap}
+Bootstrap\cite{tool:Bootstrap} es un framework front-end utilizado para desarrollar contenido web multiplataforma aplicando estilos predefinidos de forma rápida y sencilla.
+
+
+\subsection{Nbgrader}
+Como se ha descrito en la sección de Back-End, nbgrader es una librería de Python que facilita la creación y calificación de tareas en notebooks de Jupyter. Permite a los instructores crear fácilmente tareas basadas en el notebook que incluyen tanto ejercicios de codificación como respuestas libres escritas. Nbgrader también proporciona una interfaz optimizada para calificar rápidamente las tareas completadas.
+
+Su uso dentro del Fron-End consiste en la creación de tareas por parte de los profesores gracias a la vista de creación de tareas que incluye dentro de la visualización de Notebooks dentro de Jupyter Notebook. 
+
+
+\section{Jupyter Notebook}
+Jupyter Notebook\cite{tool:JupyterNotebooks} es una aplicación cliente-servidor que permite crear y compartir documentos web en formato JSON que siguen un esquema versionado y una lista ordenada de celdas de entrada y de salida. Estas celdas albergan, entre otras cosas, código, texto (en formato Markdown), fórmulas matemáticas y ecuaciones, o también contenido multimedia (Rich Media). El programa se ejecuta desde la aplicación web cliente que funciona en cualquier navegador estándar.
+
+
+
+\section{Otras Herramientas Estudiadas} \label{OtrasHerramientas}
+\subsection{CodeGrade}
+CodeGrade\cite{tool:CodeGrade} es una plataforma de aprendizaje diseñada específicamente para la enseñanza de lenguajes de programación, que hace que la calificación y entrega de ejercicios sea más efectiva para los estudiantes y más eficaz para los profesores, proporcionando un entorno en línea diseñado específicamente para cubrir las necesidades de la educación de la programación moderna.
+
+A diferencia con la mayoría de cursos y herramientas para el aprendizaje de lenguajes de programación en los que los ejercicios son revisados de forma clásica y poco intuitiva, CodeGrade crea un entorno intuitivo para la revisión de ejercicios de programación.
+
+
+\subsection{CodingRooms}
+
+CodingRooms\cite{tool:CodingRooms} es una plataforma de creación de cursos online, similar a CodeGrade, orientada a la enseñanza de lenguajes de programación. Ofrece un entorno en tiempo real en el que los instructores pueden ver todo el código de sus estudiantes a través de tableros interactivos combinado con la posibilidad de crear sesiones en directo o previamente grabadas por parte de los profesores para impartir los contenidos.
+La principal y más atractiva característica de CodingRooms es la capacidad de creación de tareas autocalificables para los alumnos dentro de un curso. Con respecto al resto de características y funcionalidades, estas son muy similares a las ya nombradas para CodeGrade.
+
+
+\subsection{Otter-Grader}
+Este es un autocalificador \cite{tool:Otter-Grader} ligero y modular de código abierto diseñado para calificar tareas de Python y R para clases a cualquier escala, abstrayendo el funcionamiento interno del autograder, haciéndolo así compatible con la distribución de tareas de cualquier instructor.
+Otter soporta calificación local a través de contenedores Docker paralelos, calificando mediante el uso de plataformas de autocalificación de terceros (LMSs), la máquina del instructor y un paquete cliente que permite a los alumnos e instructores comprobar y calificar las tareas. Este está diseñado para calificar ejecutables Python y R, Jypyter Notebooks y documentos RMarkdown, y es compatible con diferentes LMSs como Canvas y Gradescope.
+
+
+\subsection{CS 41 Autograder}
+
+CS 41 Hap.py\cite{tool:CS41Autograder} es un curso de Stanford sobre el lenguaje de programación Python. Este permite la ejecución del código del estudiante y el código solución comparando la salida de ambos, y la creación de test unitarios por parte del instructor que pueden ser ejecutados de forma concurrente, con la característica de que el instructor puede engancharse al módulo y proporcionar la lógica para post-procesar los resultados de las pruebas.

@@ -1,0 +1,330 @@
+\apendice{Plan de Proyecto Software}
+
+\section{Introducción}
+En este primer apéndice se van a exponer los distintos \textit{sprints} que se han realizado durante el desarrollo del proyecto junto con un estudio de la viabilidad de este dividido en dos apartados: viabilidad económica y viabilidad legal.
+\section{Planificación temporal}
+Como ya se ha mencionado anteriormente, al desarrollo de este proyecto le ha sido aplicada una metodología \textit{agile}. Para posibilitar la adaptación de esta metodología a un proyecto supervisado, realizado por una sola persona, se han seguido las siguientes indicaciones:
+\begin{itemize}
+\item El desarollo ha sido dividido en \textit{sprints} de dos semanas de duración.
+\item Al inicio de cada sprint eran definidas las tareas a realizar dentro de este, añadiéndose nuevas durante el desarrollo del sprint en caso de finalización de las incialmente definidas o por necesidades surgidas en el desarrollo de otras tareas y pasadas al siguiente sprint en caso de la no finalización de estas.
+\item Se organizaban reuniones de supervisión alrededor de la fecha de finalización de cada sprint para comprobar el estado de cada tarea y su correcta superación.
+\item A cada tarea le era asignado un coste estimado en formato de tiempo (horas) que el programador decidía de manera personal al definirse cada tarea.
+\item Al darse por concluida una tarea se especificaba el coste real que esta había supuesto.
+\end{itemize}
+La gestión de tareas y la estimación de sus costes se ha realizado mediante la herramienta \textit{ZenHub}\cite{tool:ZenHub} mencionada en el apartado de Técnicas y Herramientas de la memoria.
+
+A continuación se describirán los \textit{sprints} por los que este proyecto ha pasado:
+
+\subsection{Sprint 1 (22/03/22 - 05/04/22)}
+Este sprint consistió en una primera toma de contacto con las herramientas de autograding en Python\cite{tool:Python}. Momento del proyecto orientado hacia la investigación y aprendizaje ya que se trataba del inicio de este. Adicionalmente, se incluyó en este sprint la búsqueda de un curso\cite{PythonParaTodos} introductorio a Python sobre el que basar el que posteriormente sería nuestro curso y la redacción del apartado de objetivos de la memoria:
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{| l | c | c |}
+\textbf{Tarea}                   & \textbf{Est} & \textbf{Real} \\ \hline
+Búsqueda de atuograders, comparativa y elección & 1 & 6 \\
+Búsqueda del curso de Python & 1 & 1 \\
+Instalación y pruebas documentadas del autograder &  & \\
+seleccionado & 8 & 8 \\
+Completar apartado Objetivos en la memoria & 8 & - \\ \hline
+\end{tabular}
+\caption{Tareas sprint 1}
+\label{tab:sprint}
+\end{center}
+\end{table}
+
+\subsection{Sprint 2 (05/04/22 - 19/04/22)}
+Al no poder ser realizada / finalizada la redacción del apartado de objetivos en el sprint inicial, esta tarea fue delegada a este sprint número 2 la cual pasó a ser la primera tarea de este. 
+
+Una vez realizada la primera toma de contacto con la herramienta de autograding seleccionada \textit{Nbgrader}\cite{tool:Nbgrader}, se definieron para este sprint las tareas de adición de la documentación sobre la instalación y prueba de esta al Apéndice de Diseño, junto con la realización de una investigación sobre su funcionamiento interno. Además se añadió la tarea de creación de nuestro curso introductorio a Python junto con sus pruebas autocorregibles en un futuro mediante la herramienta Nbgrader. 
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{| l | c | c |}
+\textbf{Tarea}                   & \textbf{Est} & \textbf{Real} \\ \hline
+Completar apartado Objetivos en la memoria & 8 & 3 \\
+Añadir la documentación de prueba e instalación de Nbgrader & &\\
+a los anexos & 2 & 2 \\
+Realizar investigación del funcionamiento interno de Nbgrader & 13 & 12 \\
+Creación del curso de Python & 13 & 14 \\ \hline
+\end{tabular}
+\caption{Tareas sprint 3}
+\label{tab:sprint}
+\end{center}
+\end{table}
+
+\subsection{Sprint 3 (19/04/22 - 03/05/22)}
+Finalizadas de forma exitosa todas las tareas del sprint 2, comenzaba así el sprint número 3 para el que fue definida la tarea de redacción de una explicación del funcionamiento de Nbgrader basada en la información obtenida en la tarea de investigación del sprint anterior.
+
+Adicionalmente y como paso previo al inicio del desarrollo de la plataforma, era necesaria la prueba de ejecución y acceso a Jupyter Notebooks de forma remota en un contenedor Docker\cite{tool:Docker}, tarea que fue incluida en este sprint.
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{| l | c | c |}
+\textbf{Tarea}                   & \textbf{Est} & \textbf{Real} \\ \hline
+Jupyter Notebooks en Docker & 13 & 13 \\
+Redactar explicación sobre el funcionamiento de Nbgrader & 5 & - \\ \hline
+\end{tabular}
+\caption{Tareas sprint 3}
+\label{tab:sprint}
+\end{center}
+\end{table}
+
+
+
+\subsection{Sprint 4 (03/05/22 - 17/05/22)}
+Debido a que la completitud de la tarea de redacción de explicación sobre el funcionamiento de Nbgrader no había sido posible en el sprint número 3, esta tarea fue delegada a este cuarto sprint, tarea que fue acompañada con el comienzo del desarrollo de la plataforma web la cual contenía: la creación del login\cite{tool:FlaskLogin} inicial con \textit{Flask}, una prueba de acceso a Jupyter Notebooks\cite{tool:JupyterNotebooks} ejecutado remotamente en un contenedor docker junto con el proyecto Flask, el desarrollo del diagrama de casos de uso inicialmente pensado para la plataforma y el inicio de la implementación de las vistas y funcionalidades para los alumnos.
+
+
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{| l | c | c |}
+\textbf{Tarea}                   & \textbf{Est} & \textbf{Real} \\ \hline
+Redactar explicación sobre el funcionamiento de Nbgrader & 5 & 6 \\
+Creación de nuestro primer login con Flask & 5 & 6 \\
+Acceso a Jupyter Notebooks ejecutado remotamente & & \\
+desde una aplicación Flask & 5 & 5 \\
+Creación del diagrama de casos de uso & 2 & 2 \\
+Desarrollo de las vistas de la aplicación para los alumnos & 21 & - \\\hline
+\end{tabular}
+\caption{Tareas sprint 4}
+\label{tab:sprint}
+\end{center}
+\end{table}
+
+
+\subsection{Sprint 5 (17/05/22 - 31/05/22)}
+El sprint 5 fue dedicado en su totalidad al desarrollo de las vistas y funcionalidades de la aplicación para los alumnos, tarea de la que surgieron otras sub-tareas en su desarrollo que consistían en: prueba y adaptación de la API de Nbgrader\cite{tool:NbgraderAPI} a las funcionalidades implementándose en el momento y construcción de las tablas de la base de datos\cite{tool:SQLAlchemy}\cite{tool:SQLite} e inicialización de esta.
+
+
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{| l | c | c |}
+\textbf{Tarea}                   & \textbf{Est} & \textbf{Real} \\ \hline
+Desarrollo de las vistas de la aplicación para los alumnos & 21 & 24 \\
+  (sub-tarea) Prueba y adaptación API de Nbgrader & 2 & 2 \\
+  (sub-tarea) Inicialización de la base de datos & 5 & 5 \\\hline
+\end{tabular}
+\caption{Tareas sprint 5}
+\label{tab:sprint}
+\end{center}
+\end{table}
+
+\subsection{Sprint 6 (31/05/22 - 14/06/22)}
+Tras la finalización del desarrollo de las funcionalidades para los estudiantes, se definía en el sprint 6 la tarea de desarrollo de las vistas y funcionalidades de la aplicación para el profesor, de la cual se generaron las sub-tareas de: desarrollo de funcionalidad de gestión completa de alumnos, funcionalidad de visualización de calificaciones por parte del profesor, funcionalidad de gestión completa de cursos.
+
+Adicionalmente, en este sprint también se definieron otras tareas de menor carga de trabajo como el desarrollo del diagrama de clases de la base de datos y el diseño de un estado inicial para la plataforma, con el curso de Python, alumnos y entregas ya realizadas, estado incial que sería incluido en la plataforma posteriormente tras el despliegue vacío de esta.
+
+También fue definida las tareas de creación del landing y adición de estilos y las vistas de la plataforma, siendo esta última únicamente iniciada durante este sprint.
+
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{| l | c | c |}
+\textbf{Tarea}                   & \textbf{Est} & \textbf{Real} \\ \hline
+Desarrollo de las vistas y funcionalidades de la aplicación & &\\
+para el profesor & 21 & 30 \\
+ (sub-tarea) Gestión completa de alumnos & 5 & 5 \\
+ (sub-tarea) Gestión de calificaciones & 2 & 2 \\
+ (sub-tarea) Gestión completa de cursos & 13 & 13 \\
+Desarrollo diagrama de clases de la base de datos & 2 & 2 \\
+Establecer el contenido incial que tendrá la plataforma & 2 & 2 \\
+Creación del landing de la plataforma & 2 & 2\\
+Dar estilos a toda la plataforma con Bootstrap y landing con CSS
+ & 21 & - \\ \hline
+\end{tabular}
+\caption{Tareas sprint 6}
+\label{tab:sprint}
+\end{center}
+\end{table}
+
+
+\subsection{Sprint 7 (14/06/22 - 28/06/22)}
+Añadidas todas las funcionalidades incialmente pensadas para la plataforma, el sprint 7 iniciaba con el final de la tarea de adición de estilos y creación de landing con Bootstrap\cite{tool:Bootstrap} y CSS\cite{tool:CSS} y en este eran definidas las tareas de: adición de nuevas funcionalidades (obtención de feedback, eliminación de entregas, descarga de tareas enviadas, eliminación de cursos y secciones), despliegue de la app en una instancia EC2 de AWS\cite{tool:AWS} y completitud de apartados de la memoria del proyecto.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{| l | c | c |}
+\textbf{Tarea}                   & \textbf{Est} & \textbf{Real} \\ \hline
+Dar estilos a toda la plataforma con bootstrap y landing con CSS
+ & 21 & 21 \\
+Añadir funcionalidad de obtención de feedback & 3 & 1 \\
+Añadir funcionalidad de eliminación de entregas & 2 & 2 \\
+Añadir funcionalidad de eliminación de cursos y secciones & 3 & 3 \\
+Añadir funcionalidad de descarga de envíos & 2 & 2 \\
+Completar apartado Técnicas y Herramientas en la memoria & 5 & 4 \\ 
+Completar apartado Aspectos Relevantes en la memoria & 5 & 4 \\ 
+Completar apartados de Introducción, Conceptos Teóricos, & &\\
+Trabajos Relacionados y Conclusiones & 8 & 8 \\ \hline
+\end{tabular}
+\caption{Tareas sprint 7}
+\label{tab:sprint}
+\end{center}
+\end{table}
+
+
+\subsection{Sprint 8 (28/06/22 - 07/07/22)}
+El sprint número 8 da como concluido el proyecto, incluyéndose en este tareas dedicadas al desarrollo de los anexos y la adición de los contenidos definidos previamente a la plataforma ya desplegada.
+
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{| l | c | c |}
+\textbf{Tarea}                   & \textbf{Est} & \textbf{Real} \\ \hline
+Completar anexo Plan de Proyecto Software & 3 & 3 \\
+Completar anexo Especificación de Requisitos & 3 & 3 \\
+Completar anexo Especificación de Diseño & 3 & 3 \\ 
+Completar anexo Documentación del Programador & 5 & 5 \\
+Completar anexo Documentación del Usuario & 8 & 8 \\ 
+Adición de contenidos a la plataforma desplegada & 2 & 2\\\hline
+\end{tabular}
+\caption{Tareas sprint 8}
+\label{tab:sprint}
+\end{center}
+\end{table}
+
+
+
+\section{Estudio de viabilidad}
+
+\subsection{Viabilidad económica}
+Analizaremos los costes en que habría incurrido el desarrollo de este proyecto de haberse
+llevado a cabo en un ámbito empresarial o si se hubiese encargado a una entidad externa.
+
+La estructura de costes la desglosaremos en los apartados coste de personal , costes de
+software y costes del hardware y costes de estructura.
+
+En cuanto a los ingresos o beneficios por la aplicación desarrollada no se realizada nigún
+análisis. La razón es que no está previsto un uso comercial del producto generado, sino que
+sería una herramienta utilizable dentro de un marco más general de formación en el que puede
+haber otras herramientas empleadas. En dicho marco la mayor parte del valor añadido y de la
+que se han de considerar los ingresos es la actividad realizada por los profesores: desarrollo del material de cursos, evaluaciones, tutorías y comunicaciones con alumnos, gestión de alumnos, etc.
+
+\subsubsection{Costes de personal}
+Para llevar a término el proyecto se ha requerido de un desarrollador durante un periodo de
+cuatro meses. Si bien el tiempo de desarrollo es inferior al señalado hay que incluir también el dedicado al análisis de herramientas y estudio de soluciones. El coste de personal se desglosa en la siguiente tabla:
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{| l | c |} \hline
+\textbf{Concepto}   & \textbf{Coste mensual (€)}  \\ \hline
+Salario bruto  & 1500,00 \\
+Seguridad Social (29,90 \%)  & 449,50\\
+Coste para el empleador  & 1949,50 \\ \hline
+Total Coste de personal (4 meses)  & 7794,00 €\\ \hline
+\end{tabular}
+\caption{Costes de personal}
+\end{center}
+\end{table}
+
+
+El salario bruto incluye todo el montante del salario del trabajador por este concepto, es decir, integra la parte de prorrata de pagas extra. Para hallar el sueldo mensual neto del trabajador se debe descontar la prorrata de pagas extra (1 / 6 del bruto mensual) y la parte de Seguridad Social a cuenta del trabajador, que es el 6,35 \% del bruto mensual (incluyen los apartados contingencias comunes, desempleo y formación profesional).
+
+El apartado de Seguridad incluye la parte a cuenta de la empresa por contingencias comunes
+(23,60 \%), desempleo (5,50 \%), FOGASA (0,20 \%) y formación profesional (0,60 \%), según las tablas de la Seguridad Social para 2022.
+
+\subsubsection{Costes de hardware}
+Para este apartado se considera que se ha utilizado un ordenador portátil y ha sido necesario un teléfono móvil a cuenta de la empresa y disposición del trabajador. La amortización se consideran 4 años para ambos, con valor residual cero a final de dicho periodo.
+
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{| l | c | c |} \hline
+\textbf{Equipo}   & \textbf{Coste (€)} & \textbf{Coste amortización 4 meses (€)}  \\ \hline
+Ordenador portátil & 900,00 & 75,00 \\
+Teléfono móvil & 264,00 & 22,00\\  \hline 
+Total & 1164,00 & 97,00\\ \hline
+
+\end{tabular}
+\caption{Costes de hardware}
+\end{center}
+\end{table}
+
+
+
+\subsubsection{Costes de software}
+En este apartado se considera el coste de aquellas licencias de software necesarias y que no sean gratuitas.
+
+En nuestro caso, esto afecta a las licencias de sistema operativo de los equipos hardware
+empleado. No obstante, en el apartado relativo al hardware el coste total del equipo ya incluye el de la licencia de sistema operativo que llevan instalado de origen. El coste de amortización de dicho software se considera igual que el del equipo, pues no se prevé renovación del sistema operativo del equipo durante su vida útil. Es decir, que el coste del software de está ya incluido en el coste del apartado anterior.
+
+\subsubsection{Costes de estructura}
+En este apartado se incluyen costes aplicables al entorno de trabajo por parte de la empresa y servicios para que la funcionalidad del pruesto de trabajo sea operativa.
+
+Se considera que el trabajo se ha realizado en modo teletrabajo, por lo que no se precisa una oficina operativa para el trabajador o un puesto destinado para él en una oficina. Esto resulta en que no se contemplan los costes asociados de alquiler de oficina, instalaciones, suministros eléctricos, limpieza, etc. No obstante, el trabajador necesita que se ponga a su disposición una conexión a Internet. Además necesita una compensación por el gasto de consumo eléctrico que requiera durante su trabajo, pues de otro modo correría por su cuenta.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{| l | c |} \hline
+\textbf{Concepto}   & \textbf{Coste mensual (€)}  \\ \hline
+Conexión a internet & 30\\
+Compensación por gasto eléctrico & 10\\
+Coste por mes & 40 \\ \hline
+Total Coste de estructura (4 meses)  & 160 €\\ \hline
+\end{tabular}
+\caption{Costes de estructura}
+\end{center}
+\end{table}
+
+\subsubsection{Costes totales}
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{| l | c |} \hline
+\textbf{Capítulo}   & \textbf{Coste (€)}  \\ \hline
+Personal & 7.794,00\\
+Hardware/Software & 97,00\\
+Estructura &  160,00 \\ \hline
+Total  & 8.051,00 €\\ \hline
+\end{tabular}
+\caption{Costes totales}
+\end{center}
+\end{table}
+
+
+
+\subsection{Viabilidad legal}
+En este apartado se consideran las licencias de software de terceras partes empleado en este proyecto.  Se analiza su repercusión o influencia en la viabilidad legal dado que su uso puede aparejar limitaciones o restricciones legales.
+
+La siguiente tabla contiene las licencias de las diferentes herramientas empleadas:
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{| l | c |} \hline
+\textbf{Herramienta}   & \textbf{Licencia}  \\ \hline
+Python	&		PSF \\
+Flask	&		BSD 3-clause \\
+Flask-Login	&	BSD 3-clause\\ 
+Flask-SQLAlchemy &	BSD 3-clause\\
+SQLite	&		No se requiere\\
+WTForms	&	BSD 3-clause\\
+Nbgrader	&	BSD 3-clause\\
+JavaScript	&	GNU-GPL-3.0\\
+Bootstrap &		MIT License\\
+Jupyter Notebook &	BSD 3-clause\\
+Docker	&		Apache License 2.0\\\hline
+\end{tabular}
+\caption{Tabla de licencias}
+\end{center}
+\end{table}
+
+
+Se describen a continuación estas licencias:
+
+\begin{itemize}
+\item \textbf{BSD}: Las licencias BSD son una familia de licencias de software libre permisivas , que imponen restricciones mínimas sobre el uso y distribución del software cubierto. Actualmente son de uso generalizado licencias BSD modificadas respecto a la licencia BSD que se estableció originalmente para la versión BSD de unix. La licencia BSD simplemente requiere que todo el código conserve el aviso de licencia BSD si se redistribuye en formato de código fuente, o que reproduzca el aviso si se redistribuye en formato binario. La licencia BSD 3-clause contiene un descargo de responsabilidad en la documentación y materiales proporcionados con la distribución. Además no pueden utilizarse sin permiso con fines de respaldo o promoción los nombres del titular de los derechos de autor ni de sus colaboradores.
+
+\item \textbf{GNU-GPLv3}:  Esta licencia permite el uso comercial del software, su distribución, modificación y uso privado. Quien haga alguno de los usos anteriores está obligado a licenciar como código libre cualquier modificación del código o herramientas incorporadas con esta licencia.
+
+\item \textbf{Apache 2.0}: Esta licencia tiene propiedades iguales que la licencia GPLv3. No obstante, no obliga a que los nuevos desarrollos con dependencias con Apache 2.0 se licencien como código libre.
+
+\item \textbf{MIT}: La licencia MIT permite uso comercial del software licenciado, su modificación, su libre distribución y el uso privado. No presenta garantías ni responsabilidad. La única condición que impone es hacer referencia a tal licencia. No obliga a mantener la licencia, ni limita la distribución del software que use productos bajo esta licencia. Esto implica que la licencia final puede ser cualquiera.
+
+\item \textbf{PSF}: Es una licencia de software libre, que al modo de BSD, es permisiva. Cumple con los requisitos OSI de licencia de software libre y es compatible con la licencia GPL. Al modo de las licencias BSD, permite modificaciones del código fuente y la creación de trabajos derivados, y no obliga a que tales modificaciones ni trabajos derivados tengan que ser a su vez de código abierto.
+\end{itemize}
+
+De todas las licencias descritas con anterioridad, la más restrictiva es la licencia GPLv3 la cual
+ha sido aplicada a nuestra aplicación una vez desarrollada, permitiendo tanto su uso comercial como privado.
+
